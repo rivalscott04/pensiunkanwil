@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Keterangan Meninggal Dunia</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
+    <style>
+        @page {
+            size: A4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            background: white;
+        }
+
+        .sheet {
+            padding: 1.5cm 2cm;
+        }
+
+        /* Lampiran header */
+        .lampiran-header {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 11pt;
+            margin-left: auto;
+            width: fit-content;
+        }
+
+        /* Document title */
+        .document-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+
+        /* Document number */
+        .document-number {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* Content section */
+        .content {
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+        }
+
+        /* Identity sections */
+        .identity-section {
+            margin-bottom: 25px;
+            margin-left: 20px;
+        }
+
+        .identity-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+
+        .identity-label {
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .identity-colon {
+            width: 20px;
+            flex-shrink: 0;
+        }
+
+        .identity-value {
+            flex-grow: 1;
+        }
+
+        /* Statement content */
+        .statement-content {
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .statement-content p {
+            margin-bottom: 15px;
+        }
+
+        /* Signature section */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .signature-block {
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .signature-date {
+            margin-bottom: 10px;
+        }
+
+        .signature-title {
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .signature-subtitle {
+            margin-bottom: 60px;
+            font-weight: bold;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .signature-nip {
+            font-size: 10pt;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .sheet {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="A4">
+    <section class="sheet">
+        <!-- Lampiran header -->
+        <div class="lampiran-header">
+            LAMPIRAN<br>
+            PERATURAN BADAN KEPEGAWAIAN NEGARA<br>
+            REPUBLIK INDONESIA<br>
+            NOMOR 3 TAHUN 2020<br>
+            TENTANG<br>
+            PETUNJUK TEHNIS PEMBERHENTIAN<br>
+            PEGAWAI NEGERI SIPIL
+        </div>
+
+        <!-- Document title -->
+        <div class="document-title">
+            SURAT KETERANGAN MENINGGAL DUNIA
+        </div>
+
+        <!-- Document number -->
+        <div class="document-number">
+            Nomor : {{nomor_surat}}
+        </div>
+
+        <!-- Opening statement -->
+        <div class="content">
+            <p>Yang bertanda tangan dibawah ini :</p>
+        </div>
+
+        <!-- Identity section - Pembuat surat -->
+        <div class="identity-section">
+            <div class="identity-row">
+                <div class="identity-label">a. Nama</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nama_pembuat}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">b. Nip</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nip_pembuat}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">c. Jabatan</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{jabatan_pembuat}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">d. Unit Organisasi</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{unit_organisasi_pembuat}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">e. Nama Instansi</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nama_instansi_pembuat}}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <p>Menerangkan bahwa :</p>
+        </div>
+
+        <!-- Identity section - Yang meninggal -->
+        <div class="identity-section">
+            <div class="identity-row">
+                <div class="identity-label">a. Nama</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nama_almarhum}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">b. Nip</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nip_almarhum}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">c. Jabatan</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{jabatan_almarhum}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">d. Unit Organisasi</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{unit_organisasi_almarhum}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">e. Nama Instansi</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nama_instansi_almarhum}}</div>
+            </div>
+        </div>
+
+        <!-- Statement content -->
+        <div class="statement-content">
+            <p>Berdasarkan {{dasar_surat}} Telah meninggal Dunia pada tanggal {{tanggal_meninggal}}</p>
+
+            <p>Demikian keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+        </div>
+
+        <!-- Signature section -->
+        <div class="signature-section">
+            <div class="signature-block">
+                <div class="signature-date">{{tempat}}, {{tanggal}}</div>
+                <div class="signature-title">{{jabatan_penandatangan_upper}}</div>
+                <div class="signature-subtitle">{{unit_penandatangan}},</div>
+                <div class="signature-name">{{nama_penandatangan}}</div>
+                <div class="signature-nip">NIP. {{nip_penandatangan}}</div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

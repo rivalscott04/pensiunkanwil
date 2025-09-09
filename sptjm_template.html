@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Pernyataan Tanggung Jawab Mutlak</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
+    <style>
+        @page {
+            size: A4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            background: white;
+        }
+
+        .sheet {
+            padding: 1.5cm 2cm;
+        }
+
+        /* Header - Full width, no additional margin */
+        .header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid black;
+            overflow: hidden;
+        }
+
+        .logo {
+            float: left;
+            width: 70px;
+            height: 70px;
+            margin-right: 15px;
+        }
+
+        .header-text {
+            font-size: 13pt;
+            font-weight: bold;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .header-info {
+            font-size: 11pt;
+            line-height: 1.1;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* Document title */
+        .document-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        /* Document number */
+        .document-number {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* Content section */
+        .content {
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+        }
+
+        /* Identity section */
+        .identity-section {
+            margin-bottom: 25px;
+        }
+
+        .identity-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+
+        .identity-label {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .identity-colon {
+            width: 20px;
+            flex-shrink: 0;
+        }
+
+        .identity-value {
+            flex-grow: 1;
+        }
+
+        /* Statement content */
+        .statement-content {
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .statement-content p {
+            margin-bottom: 15px;
+        }
+
+        /* Signature section */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .signature-block {
+            text-align: center;
+            min-width: 250px;
+        }
+
+        .signature-date {
+            margin-bottom: 10px;
+        }
+
+        .signature-title {
+            margin-bottom: 60px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .sheet {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="A4">
+    <section class="sheet">
+        <!-- Header - Full width -->
+        <div class="header">
+            <img src="{{logo_url}}" alt="Logo Kementerian Agama" class="logo">
+            <div class="header-text">
+                KEMENTERIAN AGAMA REPUBLIK INDONESIA<br>
+                KANTOR WILAYAH KEMENTERIAN AGAMA<br>
+                PROVINSI NUSA TENGGARA BARAT
+            </div>
+            <div class="header-info">
+                Jalan Udayana No. 6 Tlp. 633040 Fax ( 0370 ) 622317 Mataram<br>
+                Website: http:/ntb.kemenag.go.id email: updepagntb@gmail.com
+            </div>
+        </div>
+
+        <!-- Document title -->
+        <div class="document-title">
+            SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK
+        </div>
+
+        <!-- Document number -->
+        <div class="document-number">
+            Nomor : {{nomor_surat}}
+        </div>
+
+        <!-- Opening statement -->
+        <div class="content">
+            <p>Yang bertanda tangan di bawah ini:</p>
+        </div>
+
+        <!-- Identity section -->
+        <div class="identity-section">
+            <div class="identity-row">
+                <div class="identity-label">Nama</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nama_penandatangan}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">NIP.</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{nip_penandatangan}}</div>
+            </div>
+            <div class="identity-row">
+                <div class="identity-label">Jabatan</div>
+                <div class="identity-colon">:</div>
+                <div class="identity-value">{{jabatan_penandatangan}}</div>
+            </div>
+        </div>
+
+        <!-- Statement content -->
+        <div class="statement-content">
+            <p>Dengan ini menyatakan dan menjamin kebenaran dan bertanggung jawab atas dokumen dan data yang disampaikan dalam surat usul penyematan gelar nomor {{nomor_surat_rujukan}} tanggal {{tanggal_surat_rujukan}} perihal {{perihal_surat_rujukan}} telah sesuai dengan ketentuan peraturan perundang-undangan yang berlaku.</p>
+
+            <p>Apabila dikemudian hari ditemukan adanya dokumen dan data tersebut ternyata tidak benar, maka saya siap bertanggung jawab dan diberikan sanksi secara administrasi maupun pidana.</p>
+
+            <p>Demikian pernyataan ini saya buat dengan sadar dan tanpa tekanan dari pihak manapun.</p>
+        </div>
+
+        <!-- Signature section -->
+        <div class="signature-section">
+            <div class="signature-block">
+                <div class="signature-date">{{tempat}}, {{tanggal}}</div>
+                <div class="signature-title">Yang Membuat Pernyataan,</div>
+                <div class="signature-name">{{nama_penandatangan}}</div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

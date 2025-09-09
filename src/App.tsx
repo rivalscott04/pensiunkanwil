@@ -1,0 +1,58 @@
+import * as React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Pengajuan from "./pages/Pengajuan";
+import DetailPengajuan from "./pages/DetailPengajuan";
+import PegawaiPensiun from "./pages/PegawaiPensiun";
+import DocumentUpload from "./pages/DocumentUpload";
+import CreateSurat from "./pages/GenerateSurat";
+import GenerateSuratMeninggal from "./pages/GenerateSuratMeninggal";
+import SuratIndex from "./pages/SuratIndex";
+import GeneratePengantarGelar from "./pages/GeneratePengantarGelar";
+import GenerateSPTJM from "./pages/GenerateSPTJM";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      disableTransitionOnChange={false}
+    >
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pengajuan" element={<Pengajuan />} />
+            <Route path="/pengajuan/detail/:id" element={<DetailPengajuan />} />
+            <Route path="/pegawai" element={<PegawaiPensiun />} />
+            <Route path="/pengajuan/upload" element={<DocumentUpload />} />
+            <Route path="/generate-surat" element={<SuratIndex />} />
+            <Route path="/generate-surat/new" element={<CreateSurat />} />
+            <Route path="/generate-surat/meninggal" element={<GenerateSuratMeninggal />} />
+            <Route path="/generate-surat/pengantar-gelar" element={<GeneratePengantarGelar />} />
+            <Route path="/generate-surat/sptjm" element={<GenerateSPTJM />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
+
+export default App;

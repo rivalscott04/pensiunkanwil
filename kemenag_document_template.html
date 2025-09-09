@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumen Resmi Kementerian Agama - 2 Halaman</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
+    <style>
+        @page { 
+            size: A4;
+            margin: 0;
+        }
+        
+        @media print { 
+            body { 
+                -webkit-print-color-adjust: exact; 
+            } 
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .sheet {
+            padding: 1.5cm 2cm;
+            page-break-after: always;
+        }
+        
+        .sheet:last-child {
+            page-break-after: auto;
+        }
+        
+        .content-wrapper {
+            margin: 0 1cm;
+        }
+        
+        .header {
+            border-bottom: 3px solid black;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .header .logo {
+            width: 70px;
+            height: 70px;
+            float: left;
+            margin-right: 15px;
+        }
+        
+        .header-text {
+            font-size: 12pt;
+            font-weight: bold;
+            line-height: 1.2;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .header-info {
+            font-size: 11pt;
+            line-height: 1.1;
+            text-align: center;
+            margin: 5px 0 0 0;
+        }
+        
+        .title {
+            font-size: 10pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .document-number {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .data-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        
+        .data-label {
+            width: 150px;
+            flex-shrink: 0;
+        }
+        
+        .data-colon {
+            width: 20px;
+            flex-shrink: 0;
+        }
+        
+        .data-value {
+            flex-grow: 1;
+        }
+        
+        .statement-text {
+            margin: 20px 0;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        .signature-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .signature-date {
+            margin-bottom: 40px;
+        }
+        
+        .signature-title {
+            margin-bottom: 60px;
+            font-weight: bold;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        
+        .signature-nip {
+            margin-top: 5px;
+        }
+        
+        .reference-note {
+            font-size: 8pt;
+            margin-bottom: 15px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <!-- HALAMAN 1: Surat Pernyataan Hukuman Disiplin -->
+    <section class="sheet">
+        <!-- Header (Full Width) -->
+        <div class="header">
+            <img src="{{logo_url}}" alt="Logo Kementerian Agama" class="logo">
+            <div class="header-content">
+                <div class="header-text">
+                    KEMENTERIAN AGAMA REPUBLIK INDONESIA<br>
+                    KANTOR WILAYAH KEMENTERIAN AGAMA<br>
+                    PROVINSI NUSA TENGGARA BARAT
+                </div>
+                <div class="header-info">
+                    Jalan Udayana No. 6 Tlp. 633040 Fax ( 0370 ) 622317 Mataram<br>
+                    Website : http://ntb.kemenag.go.id email : updepagntb@gmail.com
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content with wrapper -->
+        <div class="content-wrapper">
+            <!-- Document Title -->
+            <div class="title">
+                <strong>SURAT PERNYATAAN</strong><br>
+                <strong>TIDAK PERNAH DIJATUHI HUKUMAN DISIPLIN TINGKAT SEDANG / BERAT</strong>
+            </div>
+            
+            <!-- Document Number -->
+            <div class="document-number">
+                Nomor : {{document_number_page1}}
+            </div>
+            
+            <!-- Signatory Information -->
+            <div class="signatory-info">
+                <p>Yang bertanda tangan dibawah ini :</p>
+                
+                <div class="data-row">
+                    <div class="data-label">Nama</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_name}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Nip</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_nip}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Pangkat/Golongan Ruang</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_rank}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Jabatan</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_position}}</div>
+                </div>
+            </div>
+            
+            <!-- Subject Information -->
+            <div class="subject-info" style="margin-top: 20px;">
+                <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
+                
+                <div class="data-row">
+                    <div class="data-label">Nama</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_name}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Nip</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_nip}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Pangkat/Golongan Ruang</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_rank}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Jabatan</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_position}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Instansi</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_agency}}</div>
+                </div>
+            </div>
+            
+            <!-- Statement Text -->
+            <div class="statement-text">
+                <p>dalam 1 ( satu ) tahun terakhir tidak pernah dijatuhi hukuman disiplin tingkat sedang/berat.</p>
+            </div>
+            
+            <!-- Closing Statement -->
+            <div class="statement-text">
+                <p>Demikian Surat Pernyataan ini saya buat dengan sesungguhnya dengan mengingat sumpah jabatan dan apabila dikemudian hari ternyata isi surat pernyataan ini tidak benar yang mengakibatkan kerugian bagi negara, maka saya bersedia menanggung kerugian tersebut.</p>
+            </div>
+            
+            <!-- Signature Section -->
+            <div class="signature-section">
+                <div class="signature-date">{{signature_place}}, {{signature_date}}</div>
+                <div class="signature-title">KEPALA</div>
+                <div class="signature-name">{{signatory_name}}</div>
+                <div class="signature-nip">NIP. {{signatory_nip}}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HALAMAN 2: Surat Pernyataan Proses Pidana -->
+    <section class="sheet">
+        <!-- Content with wrapper -->
+        <div class="content-wrapper">
+            <!-- Reference note -->
+            <div class="reference-note">
+                ANAK LAMPIRAN 4<br>
+                PERATURAN BADAN KEPEGAWAIAN NEGARA<br>
+                REPUBLIK INDONESIA<br>
+                NOMOR 2 TAHUN 2018<br>
+                TENTANG<br>
+                PEDOMAN PEMBERIAN PERTIMBANGAN TEHNIS<br>
+                PENSIUN PEGAWAI NEGERI SIPIL DAN PENSIUN<br>
+                JANDA/DUDA PEGAWAI NEGERI SIPIL
+            </div>
+            
+            <!-- Document Title -->
+            <div class="title">
+                <strong>SURAT PERNYATAAN</strong><br>
+                <strong>TIDAK SEDANG MENJALANI PROSES PIDANA ATAU PERNAH DIPIDANA PENJARA BERDASARKAN<br>
+                PUTUSAN PENGADILAN YANG TELAH BERKEKUATAN HUKUM TETAP</strong>
+            </div>
+            
+            <!-- Document Number -->
+            <div class="document-number">
+                Nomor : {{document_number_page2}}
+            </div>
+            
+            <!-- Signatory Information -->
+            <div class="signatory-info">
+                <p>Yang bertanda tangan dibawah ini</p>
+                
+                <div class="data-row">
+                    <div class="data-label">Nama</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_name}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Nip</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_nip}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Pangkat/Golongan Ruang</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_rank}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Jabatan</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{signatory_position}}</div>
+                </div>
+            </div>
+            
+            <!-- Subject Information -->
+            <div class="subject-info" style="margin-top: 20px;">
+                <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
+                
+                <div class="data-row">
+                    <div class="data-label">Nama</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_name}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Nip</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_nip}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Pangkat/Golongan Ruang</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_rank}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Jabatan</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_position}}</div>
+                </div>
+                
+                <div class="data-row">
+                    <div class="data-label">Instansi</div>
+                    <div class="data-colon">:</div>
+                    <div class="data-value">{{subject_agency}}</div>
+                </div>
+            </div>
+            
+            <!-- Statement Text -->
+            <div class="statement-text">
+                <p>Tidak sedang menjalani proses pidana atau pernah dipidana penjara berdasarkan putusan pengadilan yang telah berkekuatan hukum tetap karena melakukan tindak pidana kejahatan jabatan atau tindak pidana kejahatan yang ada hubungannya dengan jabatan dan/atau pidana umum.</p>
+            </div>
+            
+            <!-- Closing Statement -->
+            <div class="statement-text">
+                <p>Demikian surat pernyataan ini saya buat dengan sesungguhnya dengan mengingat sumpah jabatan dan apabila dikemudian hari ternyata isi surat pernyataan ini tidak benar yang mengakibatkan kerugian bagi negara, maka saya bersedia menanggung kerugian negara sesuai dengan ketentuan peraturan perundang-undangan.</p>
+            </div>
+            
+            <!-- Signature Section -->
+            <div class="signature-section">
+                <div class="signature-date">{{signature_place}}, {{signature_date}}</div>
+                <div class="signature-title">KEPALA</div>
+                <div class="signature-name">{{signatory_name}}</div>
+                <div class="signature-nip">NIP. {{signatory_nip}}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Template Variables Documentation -->
+    <!--
+    Template Variables:
+    - {{logo_url}} - URL logo Kementerian Agama
+    - {{document_number_page1}} - Nomor surat halaman 1
+    - {{document_number_page2}} - Nomor surat halaman 2
+    - {{signatory_name}} - Nama penandatangan
+    - {{signatory_nip}} - NIP penandatangan
+    - {{signatory_rank}} - Pangkat/golongan penandatangan
+    - {{signatory_position}} - Jabatan penandatangan
+    - {{subject_name}} - Nama pegawai yang dimaksud
+    - {{subject_nip}} - NIP pegawai yang dimaksud
+    - {{subject_rank}} - Pangkat/golongan pegawai yang dimaksud
+    - {{subject_position}} - Jabatan pegawai yang dimaksud
+    - {{subject_agency}} - Instansi pegawai yang dimaksud
+    - {{signature_place}} - Tempat penandatanganan
+    - {{signature_date}} - Tanggal penandatanganan
+    -->
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumen Resmi Kementerian Agama</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
+    <style>
+        @page {
+            size: A4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            background: white;
+        }
+
+        .sheet {
+            padding: 1.5cm 2cm;
+        }
+
+        .content-wrapper {
+            /* No margin - content aligns with header left edge */
+        }
+
+        /* Header - Full width, no content-wrapper */
+        .header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid black;
+            overflow: hidden;
+        }
+
+        .logo {
+            float: left;
+            width: 70px;
+            height: 70px;
+            margin-right: 15px;
+        }
+
+        .header-text {
+            font-size: 13pt;
+            font-weight: bold;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .header-info {
+            font-size: 11pt;
+            line-height: 1.1;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* Document info with date layout */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .document-info {
+            flex-grow: 1;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 6px;
+            align-items: flex-start;
+        }
+
+        .info-label {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .info-colon {
+            width: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            flex-grow: 1;
+        }
+
+        .document-date {
+            text-align: right;
+            min-width: 150px;
+            align-self: flex-start;
+        }
+
+        /* Addressee */
+        .addressee {
+            margin-bottom: 30px;
+        }
+
+        /* Main content */
+        .content {
+            margin-bottom: 25px;
+            text-align: justify;
+            line-height: 1.6;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+        }
+
+        /* Table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+
+        .data-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .data-table .number-col {
+            width: 40px;
+            text-align: center;
+        }
+
+        .data-table .name-col {
+            width: 200px;
+        }
+
+        .data-table .position-col {
+            width: 180px;
+        }
+
+        .data-table .education-col {
+            width: 140px;
+        }
+
+        /* Attachment list */
+        .attachment-section {
+            margin: 20px 0;
+        }
+
+        .attachment-list ol {
+            margin-left: 20px;
+        }
+
+        .attachment-list li {
+            margin-bottom: 5px;
+        }
+
+        /* Signature section - Vertical layout, right aligned */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .signature-block {
+            text-align: left;
+            min-width: 250px;
+        }
+
+        .signature-date {
+            margin-bottom: 25px;
+        }
+
+        .signature-title {
+            margin-bottom: 60px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .signature-nip {
+            font-size: 10pt;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .sheet {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="A4">
+    <section class="sheet">
+        <!-- Header - Full width, no content-wrapper -->
+        <div class="header">
+            <img src="{{logo_url}}" alt="Logo Kementerian Agama" class="logo">
+            <div class="header-text">
+                KEMENTERIAN AGAMA REPUBLIK INDONESIA<br>
+                KANTOR WILAYAH KEMENTERIAN AGAMA<br>
+                PROVINSI NUSA TENGGARA BARAT
+            </div>
+            <div class="header-info">
+                Jalan Udayana No. 6 Mataram Telp. (0370) 633040; Fax. (0370) 622317<br>
+                Website: www.ntb.kemenag.go.id email: updepagntb@gmail.com
+            </div>
+        </div>
+
+        <!-- Content wrapper for all content except header -->
+        <div class="content-wrapper">
+            <!-- Document info with date -->
+            <div class="doc-header">
+                <div class="document-info">
+                    <div class="info-row">
+                        <div class="info-label">Nomor</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{nomor_surat}}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Lamp.</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{lampiran}}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Perihal</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">Pengakuan dan Penyematan Gelar<br>Pendidikan Terakhir PNS</div>
+                    </div>
+                </div>
+                <div class="document-date">
+                    {{tanggal_surat}}
+                </div>
+            </div>
+
+            <!-- Addressee -->
+            <div class="addressee">
+                <p>
+                    Yth. Sekretaris Jenderal Kementerian Agama RI<br>
+                    Cq. Kepala Biro Kepegawaian<br>
+                    Jakarta
+                </p>
+            </div>
+
+            <!-- Main content -->
+            <div class="content">
+                <p>Bersama ini kami sampaikan bahan usul pengakuan dan penyematan gelar pendidikan terakhir PNS dilingkungan Kantor Wilayah Kementerian Agama Provinsi NTB yang namanya tercantum dibawah ini, untuk mendapatkan penyelesaian sebagai berikut :</p>
+
+                <!-- Data table -->
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="number-col">No</th>
+                            <th class="name-col">Nama / NIP</th>
+                            <th class="position-col">Jabatan</th>
+                            <th class="education-col">Pendidikan Lama</th>
+                            <th class="education-col">Pendidikan Terakhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{table_rows}}
+                    </tbody>
+                </table>
+
+                <div class="attachment-section">
+                    <p><strong>Sebagai bahan kelengkapan, berikut ini dokumen terlampir:</strong></p>
+                    <div class="attachment-list">
+                        <ol>
+                            <li>Foto copy SK CPNS</li>
+                            <li>Foto copy SK PNS</li>
+                            <li>Foto copy SK Kenaikan Pangkat Terakhir</li>
+                            <li>Foto copy SK Tugas Belajar / Izin Belajar</li>
+                            <li>Foto copy Ijazah dan Transkrip Nilai</li>
+                            <li>SKP 2 Tahun Terakhir</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <p>Demikian untuk maklum dan atas penyelesainnya disampaikan terima kasih.</p>
+            </div>
+
+            <!-- Signature section -->
+            <div class="signature-section">
+                <div class="signature-block">
+                    <div class="signature-date">{{tempat_tanggal}}</div>
+                    <div class="signature-title">{{jabatan_penandatangan}},</div>
+                    <div class="signature-name">{{nama_penandatangan}}</div>
+                    <div class="signature-nip">{{nip_penandatangan}}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Template untuk baris data tabel -->
+    <template id="table-row-template">
+        <tr>
+            <td class="number-col">{{nomor}}</td>
+            <td class="name-col">
+                <strong>{{nama}}</strong><br>
+                NIP. {{nip}}
+            </td>
+            <td class="position-col">{{jabatan}}</td>
+            <td class="education-col">{{pendidikan_lama}}</td>
+            <td class="education-col">{{pendidikan_terakhir}}</td>
+        </tr>
+    </template>
+</body>
+</html>
