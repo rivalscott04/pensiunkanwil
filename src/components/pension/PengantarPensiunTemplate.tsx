@@ -1,51 +1,44 @@
 import * as React from "react";
 
-export type PengantarPenyematanGelarRow = {
+export type PengantarPensiunRow = {
   nomor: number;
   nama: string;
   nip: string;
-  jabatan: string;
-  pendidikanLama: string;
-  pendidikanTerakhir: string;
+  golongan: string;
+  jabatanTempatTugas: string;
+  keterangan: string; // BUP/JD dll
 };
 
-export type PengantarPenyematanGelarProps = {
+export type PengantarPensiunProps = {
   logoUrl?: string;
   nomorSurat?: string;
   lampiran?: string;
-  tanggalSuratText?: string; // e.g. "5 September 2025"
-  penandatanganJabatan?: string;
-  penandatanganNama?: string;
-  penandatanganNip?: string;
-  tempatTanggalText?: string; // e.g. "Mataram, 5 September 2025"
-  rows: PengantarPenyematanGelarRow[];
+  tanggalSuratText?: string;
+  tempatTanggalText?: string;
+  rows: PengantarPensiunRow[];
   signatureMode?: "manual" | "tte";
   signatureAnchor?: "^" | "$" | "#";
+  penandatanganNama?: string;
+  penandatanganNip?: string;
 };
 
-export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelarProps> = (props) => {
+export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props) => {
   const {
     logoUrl = "",
     nomorSurat = "",
     lampiran = "-",
     tanggalSuratText = "",
-    penandatanganJabatan = "",
-    penandatanganNama = "",
-    penandatanganNip = "",
     tempatTanggalText = "",
     rows = [],
     signatureMode = "manual",
     signatureAnchor = "^",
+    penandatanganNama = "",
+    penandatanganNip = "",
   } = props;
 
   const resolvedLogoUrl = React.useMemo(() => {
     if (!logoUrl) return "";
-    try {
-      const u = new URL(logoUrl, window.location.origin);
-      return u.toString();
-    } catch {
-      return logoUrl;
-    }
+    try { return new URL(logoUrl, window.location.origin).toString(); } catch { return logoUrl; }
   }, [logoUrl]);
 
   const formatNip = React.useCallback((nip?: string) => (nip || "").replace(/\D+/g, ""), []);
@@ -69,38 +62,31 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .info-colon { width: 20px; flex-shrink: 0; }
         .info-value { flex-grow: 1; }
         .document-date { text-align: right; min-width: 150px; align-self: flex-start; }
-        .addressee { margin-bottom: 30px; }
-        .content { margin-bottom: 25px; text-align: justify; line-height: 1.6; }
-        .content p { margin-bottom: 15px; }
-        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        .addressee { margin-bottom: 16px; }
+        .content { margin-bottom: 18px; text-align: justify; line-height: 1.6; }
+        .content p { margin-bottom: 12px; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; font-size: 10pt; }
         th { font-weight: bold; text-align: center; }
         .number-col { width: 40px; text-align: center; }
-        .name-col { width: 200px; }
-        .position-col { width: 180px; }
-        .education-col { width: 140px; }
-        .attachment-section { margin: 20px 0; }
+        .name-col { width: 220px; }
+        .gol-col { width: 80px; text-align: center; }
+        .job-col { width: 260px; }
+        .ket-col { width: 80px; text-align: center; }
         .signature-section { margin-top: 40px; display: flex; justify-content: flex-end; }
         .signature-block { text-align: left; min-width: 250px; }
-        .signature-date { margin-bottom: 6px; }
+        .signature-date { margin-bottom: 3px; }
         .signature-title { margin-bottom: 60px; }
         .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; }
         .signature-name { font-weight: bold; margin-bottom: 5px; }
         .signature-nip { font-size: 10pt; }
-
-        /* Print pagination for table */
         .data-table { page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-        @media print { .data-table thead { display: table-row-group !important; } }
       `}</style>
 
       <section className="sheet">
         <div className="header">
-          {resolvedLogoUrl ? (
-            <img src={resolvedLogoUrl} alt="Logo Kementerian Agama" className="logo" />
-          ) : (
-            <div className="logo" />
-          )}
+          {resolvedLogoUrl ? (<img src={resolvedLogoUrl} alt="Logo Kementerian Agama" className="logo" />) : (<div className="logo" />)}
           <div className="header-text">
             KEMENTERIAN AGAMA REPUBLIK INDONESIA<br />
             KANTOR WILAYAH KEMENTERIAN AGAMA<br />
@@ -117,79 +103,55 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
             <div className="document-info">
               <div className="info-row"><div className="info-label">Nomor</div><div className="info-colon">:</div><div className="info-value">{nomorSurat}</div></div>
               <div className="info-row"><div className="info-label">Lamp.</div><div className="info-colon">:</div><div className="info-value">{lampiran}</div></div>
-              <div className="info-row"><div className="info-label">Perihal</div><div className="info-colon">:</div><div className="info-value">Pengakuan dan Penyematan Gelar<br />Pendidikan Terakhir PNS</div></div>
+              <div className="info-row"><div className="info-label">Perihal</div><div className="info-colon">:</div><div className="info-value">Usul Permohonan Pensiun sebagai PNS<br />An. Dra. Hikmah /196512311999032002 dkk</div></div>
             </div>
             <div className="document-date">{tanggalSuratText}</div>
           </div>
 
           <div className="addressee">
             <p>
-              Yth. Sekretaris Jenderal Kementerian Agama RI<br />
-              Cq. Kepala Biro Kepegawaian<br />
+              Kepada Yth.<br />
+              Sekretaris Jenderal Kementerian Agama RI<br />
+              Up. Kepala Biro SDM<br />
               Jakarta
             </p>
           </div>
 
           <div className="content">
-            <p>
-              Bersama ini kami sampaikan bahan usul pengakuan dan penyematan gelar pendidikan terakhir PNS dilingkungan Kantor Wilayah Kementerian Agama Provinsi NTB yang namanya tercantum dibawah ini, untuk mendapatkan penyelesaian sebagai berikut :
-            </p>
-
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th className="number-col">No</th>
-                  <th className="name-col">Nama / NIP</th>
-                  <th className="position-col">Jabatan</th>
-                  <th className="education-col">Pendidikan Lama</th>
-                  <th className="education-col">Pendidikan Terakhir</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={`${r.nomor}-${r.nip}`}>
-                    <td className="number-col">{r.nomor}</td>
-                    <td className="name-col">
-                      <strong>{r.nama}</strong><br />
-                      NIP. {formatNip(r.nip)}
-                    </td>
-                    <td className="position-col">{r.jabatan}</td>
-                    <td className="education-col">{r.pendidikanLama}</td>
-                    <td className="education-col">{r.pendidikanTerakhir}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="spacer">
-                <tr>
-                  <td colSpan={5} style={{ border: "none", padding: "16px 0" }} />
-                </tr>
-              </tfoot>
-            </table>
-
-            <div className="attachment-section">
-              <p><strong>Sebagai bahan kelengkapan, berikut ini dokumen terlampir:</strong></p>
-              <div className="attachment-list">
-                <ol>
-                  <li>Foto copy SK CPNS</li>
-                  <li>Foto copy SK PNS</li>
-                  <li>Foto copy SK Kenaikan Pangkat Terakhir</li>
-                  <li>Foto copy SK Tugas Belajar / Izin Belajar</li>
-                  <li>Foto copy Ijazah dan Transkrip Nilai</li>
-                  <li>SKP 2 Tahun Terakhir</li>
-                </ol>
-              </div>
-            </div>
-
-            <p>Demikian untuk maklum dan atas penyelesainnya disampaikan terima kasih.</p>
+            <p>Bersama ini disampaikan Permohonan Pensiun BUP/KPP dan Janda/Duda-KPP yang namanya tercantum dibawah ini dan mohon untuk mendapatkan penyelesaian sebagaimana mestinya</p>
           </div>
+
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th className="number-col">No.</th>
+                <th className="name-col">Nama/Nip</th>
+                <th className="gol-col">Gol</th>
+                <th className="job-col">Jabatan/Tempat Tugas</th>
+                <th className="ket-col">Ket.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={`${r.nomor}-${r.nip}`}>
+                  <td className="number-col">{r.nomor}</td>
+                  <td className="name-col">
+                    <strong>{r.nama}</strong><br />
+                    NIP. {formatNip(r.nip)}
+                  </td>
+                  <td className="gol-col">{r.golongan}</td>
+                  <td className="job-col">{r.jabatanTempatTugas}</td>
+                  <td className="ket-col">{r.keterangan}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           <div className="signature-section">
             <div className="signature-block">
               <div className="signature-date">{tempatTanggalText}</div>
               <div className="signature-title">Kepala,</div>
-              {signatureMode === "tte" ? (
-                <div className="signature-anchor">{signatureAnchor}</div>
-              ) : null}
+              {signatureMode === "tte" ? (<div className="signature-anchor">{signatureAnchor}</div>) : null}
               <div className="signature-name">{penandatanganNama}</div>
               <div className="signature-nip">{formatNip(penandatanganNip)}</div>
             </div>

@@ -17,6 +17,7 @@ import GenerateSuratMeninggal from "./pages/GenerateSuratMeninggal";
 import SuratIndex from "./pages/SuratIndex";
 import GeneratePengantarGelar from "./pages/GeneratePengantarGelar";
 import GenerateSPTJM from "./pages/GenerateSPTJM";
+import GeneratePengantarPensiun from "./pages/GeneratePengantarPensiun";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/generate-surat/new" element={<CreateSurat />} />
             <Route path="/generate-surat/meninggal" element={<GenerateSuratMeninggal />} />
             <Route path="/generate-surat/pengantar-gelar" element={<GeneratePengantarGelar />} />
+            <Route path="/generate-surat/pengantar-pensiun" element={<GeneratePengantarPensiun />} />
             <Route path="/generate-surat/sptjm" element={<GenerateSPTJM />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
