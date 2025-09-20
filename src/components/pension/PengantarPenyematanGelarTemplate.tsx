@@ -53,8 +53,7 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
   return (
     <div className="w-full bg-white text-black">
       <style>{`
-        @page { size: A4; margin: 48px 0 0 0; }
-        @page :first { margin: 0; }
+        @page { size: auto; margin: 0; }
         @media print { body { -webkit-print-color-adjust: exact; } }
         .sheet { padding: 1.5cm 2cm; page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }
@@ -69,9 +68,9 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .info-colon { width: 20px; flex-shrink: 0; }
         .info-value { flex-grow: 1; }
         .document-date { text-align: right; min-width: 150px; align-self: flex-start; }
-        .addressee { margin-bottom: 30px; }
-        .content { margin-bottom: 25px; text-align: justify; line-height: 1.6; }
-        .content p { margin-bottom: 15px; }
+        .addressee { margin-bottom: 15px; line-height: 1.2; }
+        .content { margin-bottom: 25px; text-align: justify; line-height: 1.3; }
+        .content p { margin-bottom: 15px; page-break-inside: avoid; line-height: 1.3; }
         table { border-collapse: collapse; width: 100%; margin: 20px 0; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; font-size: 10pt; }
         th { font-weight: bold; text-align: center; }
@@ -79,19 +78,26 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .name-col { width: 200px; }
         .position-col { width: 180px; }
         .education-col { width: 140px; }
-        .attachment-section { margin: 20px 0; }
+        .attachment-section { margin: 10px 0; page-break-inside: avoid; }
+        .attachment-section p { margin-top: 0px !important; margin-bottom: 8px !important; }
+        .attachment-list ol { margin: 0; padding-left: 20px; }
+        .attachment-list li { margin-bottom: 3px; }
         .signature-section { margin-top: 40px; display: flex; justify-content: flex-end; }
         .signature-block { text-align: left; min-width: 250px; }
-        .signature-date { margin-bottom: 6px; }
-        .signature-title { margin-bottom: 60px; }
-        .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; }
-        .signature-name { font-weight: bold; margin-bottom: 5px; }
-        .signature-nip { font-size: 10pt; }
+        .signature-date { margin-bottom: 6px; color: black; }
+        .signature-title { margin-bottom: 60px; color: black; }
+        .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; color: black; }
+        .signature-name { font-weight: bold; margin-bottom: 5px; color: black; }
+        .signature-nip { font-size: 10pt; color: black; }
 
-        /* Print pagination for table */
+        /* Simple spacing for last data */
         .data-table { page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-        @media print { .data-table thead { display: table-row-group !important; } }
+        .data-table tbody tr:last-child { margin-bottom: 15px; }
+        @media print { 
+          .data-table thead { display: table-row-group !important; }
+          .data-table tbody tr:last-child { margin-bottom: 15px !important; }
+        }
       `}</style>
 
       <section className="sheet">
@@ -161,10 +167,11 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
               </tbody>
               <tfoot className="spacer">
                 <tr>
-                  <td colSpan={5} style={{ border: "none", padding: "16px 0" }} />
+                  <td colSpan={5} style={{ border: "none", padding: "8px 0" }} />
                 </tr>
               </tfoot>
             </table>
+
 
             <div className="attachment-section">
               <p><strong>Sebagai bahan kelengkapan, berikut ini dokumen terlampir:</strong></p>
@@ -191,7 +198,7 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
                 <div className="signature-anchor">{signatureAnchor}</div>
               ) : null}
               <div className="signature-name">{penandatanganNama}</div>
-              <div className="signature-nip">{formatNip(penandatanganNip)}</div>
+              <div className="signature-nip">NIP.{formatNip(penandatanganNip)}</div>
             </div>
           </div>
         </div>

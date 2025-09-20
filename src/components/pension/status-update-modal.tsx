@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { apiUpdatePensionApplicationStatus } from "@/lib/api"
 
 interface Application {
   id: string
@@ -65,10 +66,19 @@ export function StatusUpdateModal({ open, onOpenChange, application, onStatusUpd
   const handleSave = async () => {
     if (!application || !selectedStatus) return
 
+    // Only allow diterima or ditolak status updates
+    if (selectedStatus !== 'diterima' && selectedStatus !== 'ditolak') {
+      toast({
+        title: "Status tidak valid",
+        description: "Hanya dapat mengubah status menjadi 'Diterima' atau 'Ditolak'",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await apiUpdatePensionApplicationStatus(application.id, selectedStatus)
       
       onStatusUpdate(application.id, selectedStatus)
       toast({
@@ -77,9 +87,10 @@ export function StatusUpdateModal({ open, onOpenChange, application, onStatusUpd
       })
       onOpenChange(false)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan saat mengubah status pengajuan"
       toast({
         title: "Gagal mengubah status",
-        description: "Terjadi kesalahan saat mengubah status pengajuan",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

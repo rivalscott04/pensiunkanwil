@@ -61,7 +61,7 @@ export function LoginIllustration({ className = "" }: LoginIllustrationProps) {
       <g transform="translate(320, 150)">
         <circle cx="0" cy="0" r="10" fill="currentColor" className="text-orange/20" />
         <circle cx="0" cy="0" r="3" fill="currentColor" className="text-orange" />
-        <path d="-2 -1 L0 1 L4 -3" stroke="white" strokeWidth="1" fill="none" />
+        <path d="M-2 -1 L0 1 L4 -3" stroke="white" strokeWidth="1" fill="none" />
       </g>
       
       {/* Coffee cup */}

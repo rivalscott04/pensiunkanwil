@@ -46,9 +46,9 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
   return (
     <div className="w-full bg-white text-black">
       <style>{`
-        @page { size: A4; margin: 48px 0 0 0; }
-        @page :first { margin: 0; }
-        @media print { body { -webkit-print-color-adjust: exact; } }
+        @page { size: auto; margin: 0; }
+        html, body { margin: 0; padding: 0; }
+        @media print { body { -webkit-print-color-adjust: exact; margin: 0 !important; } }
         .sheet { padding: 1.5cm 2cm; page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }
         .header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid black; overflow: hidden; }
@@ -75,11 +75,11 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
         .ket-col { width: 80px; text-align: center; }
         .signature-section { margin-top: 40px; display: flex; justify-content: flex-end; }
         .signature-block { text-align: left; min-width: 250px; }
-        .signature-date { margin-bottom: 3px; }
-        .signature-title { margin-bottom: 60px; }
-        .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; }
-        .signature-name { font-weight: bold; margin-bottom: 5px; }
-        .signature-nip { font-size: 10pt; }
+        .signature-date { margin-bottom: 3px; color: black; }
+        .signature-title { margin-bottom: 60px; color: black; }
+        .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; color: black; }
+        .signature-name { font-weight: bold; margin-bottom: 5px; color: black; }
+        .signature-nip { font-size: 10pt; color: black; }
         .data-table { page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
       `}</style>
@@ -152,8 +152,12 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
               <div className="signature-date">{tempatTanggalText}</div>
               <div className="signature-title">Kepala,</div>
               {signatureMode === "tte" ? (<div className="signature-anchor">{signatureAnchor}</div>) : null}
-              <div className="signature-name">{penandatanganNama}</div>
-              <div className="signature-nip">{formatNip(penandatanganNip)}</div>
+              <div className="signature-name" style={{ color: 'black', fontWeight: 'bold' }}>
+                {penandatanganNama || "Nama tidak tersedia"}
+              </div>
+              <div className="signature-nip" style={{ color: 'black' }}>
+                NIP.{formatNip(penandatanganNip) || "NIP tidak tersedia"}
+              </div>
             </div>
           </div>
         </div>

@@ -1,11 +1,12 @@
 import * as React from "react"
 import { useState, useRef } from "react"
-import { Upload, File, X, Eye, Check } from "lucide-react"
+import { Upload, File, X, Eye, Check, Loader2 } from "lucide-react"
 import { AppButton } from "@/components/ui/app-button"
 import { AppText } from "@/components/ui/app-typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { DocumentSection } from "@/components/pension/document-section"
 import { cn } from "@/lib/utils"
+import { apiUploadFile, FileUploadResponse } from "@/lib/api"
 
 interface FileUploadSlot {
   id: string
@@ -21,6 +22,9 @@ interface FileUploadGridProps {
   onFilePreview?: (file: File) => void
   documentLabels?: string[]
   pensionType?: string | null
+  pengajuanId?: string | null
+  onUploadSuccess?: (uploadedFile: FileUploadResponse) => void
+  onUploadError?: (error: string) => void
 }
 
 const mandatoryDocuments = [
@@ -36,9 +40,43 @@ const mandatoryDocuments = [
   "SKP Terakhir"
 ]
 
-export function FileUploadGrid({ maxFiles = 12, onFilesChange, uploadedFiles = [], onFilePreview, documentLabels = [], pensionType }: FileUploadGridProps) {
+// Map document labels to backend jenis_dokumen values
+const mapDocumentLabelToJenisDokumen = (label: string): string => {
+  const mapping: Record<string, string> = {
+    "Pengantar": "pengantar",
+    "DPCP": "dpcp",
+    "SK CPNS": "sk_cpns",
+    "SKKP Terakhir": "skkp_terakhir",
+    "Super HD": "super_hd",
+    "Super Pidana": "super_pidana",
+    "Pas Foto": "pas_foto",
+    "Buku Nikah": "buku_nikah",
+    "Kartu Keluarga (KK)": "kartu_keluarga",
+    "SKP Terakhir": "skp_terakhir",
+    "Surat Keterangan Sakit": "lainnya",
+    "Akta Kematian": "lainnya",
+    "Suket Janda/Duda": "lainnya",
+    "Pas Foto Pasangan": "lainnya",
+    "Surat Usul PPK": "lainnya",
+    "Surat Permohonan PPS": "lainnya"
+  }
+  return mapping[label] || "lainnya"
+}
+
+export function FileUploadGrid({ 
+  maxFiles = 12, 
+  onFilesChange, 
+  uploadedFiles = [], 
+  onFilePreview, 
+  documentLabels = [], 
+  pensionType,
+  pengajuanId,
+  onUploadSuccess,
+  onUploadError
+}: FileUploadGridProps) {
   const [files, setFiles] = useState<File[]>(uploadedFiles)
   const [dragActive, setDragActive] = useState(false)
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set())
 
   // Sync with external uploadedFiles prop
   React.useEffect(() => {
@@ -51,7 +89,7 @@ export function FileUploadGrid({ maxFiles = 12, onFilesChange, uploadedFiles = [
     file: files[index] || null
   }))
 
-  const handleFileSelect = (slotIndex: number, file: File) => {
+  const handleFileSelect = async (slotIndex: number, file: File) => {
     // Validate file size (300KB = 300 * 1024 bytes)
     const maxSize = 300 * 1024
     if (file.size > maxSize) {
@@ -69,6 +107,32 @@ export function FileUploadGrid({ maxFiles = 12, onFilesChange, uploadedFiles = [
     newFiles[slotIndex] = file
     setFiles(newFiles)
     onFilesChange?.(newFiles.filter(Boolean))
+
+    // Upload to backend if pengajuanId is provided
+    if (pengajuanId && documentLabels[slotIndex]) {
+      const fileId = `${slotIndex}-${file.name}`
+      setUploadingFiles(prev => new Set(prev).add(fileId))
+      
+      try {
+        const jenisDokumen = mapDocumentLabelToJenisDokumen(documentLabels[slotIndex])
+        const uploadedFile = await apiUploadFile(pengajuanId, file, jenisDokumen, true)
+        onUploadSuccess?.(uploadedFile)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Upload failed'
+        onUploadError?.(errorMessage)
+        // Remove file from local state if upload failed
+        const updatedFiles = [...files]
+        updatedFiles[slotIndex] = undefined as any
+        setFiles(updatedFiles.filter(Boolean))
+        onFilesChange?.(updatedFiles.filter(Boolean))
+      } finally {
+        setUploadingFiles(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(fileId)
+          return newSet
+        })
+      }
+    }
   }
 
   const handleFileRemove = (slotIndex: number) => {
@@ -170,6 +234,8 @@ export function FileUploadGrid({ maxFiles = 12, onFilesChange, uploadedFiles = [
     if (!slot) return null
     
     const hasFile = slot.file
+    const fileId = `${slotIndex}-${slot.file?.name || ''}`
+    const isUploading = uploadingFiles.has(fileId)
     
     return (
       <Card
@@ -202,21 +268,29 @@ export function FileUploadGrid({ maxFiles = 12, onFilesChange, uploadedFiles = [
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="p-1 bg-success text-success-foreground rounded-full">
-                    <Check className="w-3 h-3" />
-                  </div>
-                  <AppText size="sm" weight="medium" className="text-success">
-                    Berhasil
+                  {isUploading ? (
+                    <div className="p-1 bg-orange text-orange-foreground rounded-full">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="p-1 bg-success text-success-foreground rounded-full">
+                      <Check className="w-3 h-3" />
+                    </div>
+                  )}
+                  <AppText size="sm" weight="medium" className={isUploading ? "text-orange" : "text-success"}>
+                    {isUploading ? "Uploading..." : "Berhasil"}
                   </AppText>
                 </div>
-                <AppButton
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => handleFileRemove(slotIndex)}
-                >
-                  <X className="w-3 h-3" />
-                </AppButton>
+                {!isUploading && (
+                  <AppButton
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => handleFileRemove(slotIndex)}
+                  >
+                    <X className="w-3 h-3" />
+                  </AppButton>
+                )}
               </div>
               
               <div>

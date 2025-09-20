@@ -6,19 +6,36 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
-import { PejabatSelector, Personnel } from "@/components/pension/personnel-selectors";
-import { SPTJMTemplate } from "@/components/pension/SPTJMTemplate";
+import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
+import { SPTJMTemplateGelar } from "@/components/pension/SPTJMTemplateGelar";
+import { SPTJMTemplatePensiun } from "@/components/pension/SPTJMTemplatePensiun";
+import { listLettersByType } from "@/lib/letters-service";
 
 export default function GenerateSPTJM() {
+  const url = new URL(window.location.href);
+  const typeParam = (url.searchParams.get("type") || "").toLowerCase();
+  type SptjmType = "gelar" | "pensiun";
+  const [sptjmType, setSptjmType] = React.useState<SptjmType>((typeParam === "pensiun" || typeParam === "gelar") ? (typeParam as SptjmType) : "gelar");
+
+  // nomor: only digits and dot
   const [nomorSurat, setNomorSurat] = React.useState("");
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);
 
   const [nomorSuratRujukan, setNomorSuratRujukan] = React.useState("");
   const [tanggalSuratRujukanInput, setTanggalSuratRujukanInput] = React.useState("");
-  const [perihalSuratRujukan, setPerihalSuratRujukan] = React.useState("Pengakuan dan Penyematan Gelar");
+  const [perihalSuratRujukan, setPerihalSuratRujukan] = React.useState("");
 
   const [tempat, setTempat] = React.useState("Mataram");
   const [tanggalInput, setTanggalInput] = React.useState<string>("");
+
+  React.useEffect(() => {
+    setPerihalSuratRujukan((prev) => prev || (sptjmType === "gelar" ? "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS" : "Usul Pensiun BUP, J/D /KPP"));
+    const u = new URL(window.location.href);
+    if (u.searchParams.get("type") !== sptjmType) {
+      u.searchParams.set("type", sptjmType);
+      window.history.replaceState({}, "", u.toString());
+    }
+  }, [sptjmType]);
 
   const renderTanggal = React.useCallback((val: string) => {
     if (!val) return "";
@@ -35,7 +52,84 @@ export default function GenerateSPTJM() {
   const tanggalSuratRujukanText = React.useMemo(() => renderTanggal(tanggalSuratRujukanInput), [tanggalSuratRujukanInput, renderTanggal]);
   const tanggalText = React.useMemo(() => renderTanggal(tanggalInput), [tanggalInput, renderTanggal]);
 
+  // Atas Nama list for pensiun type
+  const [atasNama, setAtasNama] = React.useState<Personnel[]>([]);
+  // Dropdown letters state
+  type LetterOption = { id: string; label: string; nomor: string; tanggal: string; perihal?: string };
+  const [letterOptions, setLetterOptions] = React.useState<LetterOption[]>([]);
+  const [selectedLetterId, setSelectedLetterId] = React.useState<string>("");
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const type = sptjmType === 'gelar' ? 'pengantar_gelar' as const : 'pengantar_pensiun' as const
+        const items = await listLettersByType(type)
+        if (cancelled) return
+        setLetterOptions(items.map(l => ({ id: l.id, label: `${l.nomorSurat} — ${l.tanggalSurat}`, nomor: l.nomorSurat, tanggal: l.tanggalSurat, perihal: undefined })))
+      } catch {
+        setLetterOptions([])
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [sptjmType])
+
+  const handleSelectLetter = (id: string) => {
+    setSelectedLetterId(id)
+    const found = letterOptions.find(o => o.id === id)
+    if (found) {
+      setNomorSuratRujukan(found.nomor)
+      // backend uses yyyy-mm-dd; keep as is for our renderer
+      setTanggalSuratRujukanInput(found.tanggal)
+      if (!perihalSuratRujukan) setPerihalSuratRujukan(sptjmType === 'gelar' ? 'Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS' : 'Usul Pensiun BUP, J/D /KPP')
+    }
+  }
+
+  const validate = React.useCallback(() => {
+    const next: Record<string, string> = {}
+    if (!nomorSurat || !/^\d+(?:\.\d+)*$/.test(nomorSurat)) next.nomorSurat = 'Nomor hanya angka & titik'
+    if (!pejabat) next.pejabat = 'Pejabat wajib dipilih'
+    if (!selectedLetterId || !nomorSuratRujukan) next.ref = 'Pilih surat pengantar'
+    if (!tanggalInput) next.tanggalInput = 'Tanggal SPTJM wajib diisi'
+    else {
+      const d = new Date(tanggalInput)
+      if (isNaN(d.getTime())) next.tanggalInput = 'Tanggal tidak valid'
+    }
+    if (sptjmType === 'pensiun' && atasNama.length < 1) next.atasNama = 'Minimal 1 nama pada Atas Nama'
+    return next
+  }, [nomorSurat, pejabat, selectedLetterId, nomorSuratRujukan, tanggalInput, sptjmType, atasNama.length])
+
+  const canPrint = React.useMemo(() => Object.keys(validate()).length === 0, [validate])
+
+  const finalNomorSurat = React.useMemo(() => {
+    const parts = (tanggalInput || "").split("-");
+    const mm = parts.length === 3 ? String(parseInt(parts[1] || "", 10)).padStart(2, "0") : "";
+    const yyyy = parts.length === 3 ? parts[0] : "";
+    const nomorOnly = (nomorSurat || "").replace(/[^0-9.]/g, "");
+    const segments: string[] = [];
+    if (sptjmType === "pensiun") {
+      const head = nomorOnly ? `B-${nomorOnly}` : "B-";
+      segments.push(head, "Kw.18.1", "2", "Kp.09");
+    } else {
+      if (nomorOnly) segments.push(nomorOnly);
+      segments.push("Kw.18.01", "Kp.01.1");
+    }
+    if (mm) segments.push(mm);
+    if (yyyy) segments.push(yyyy);
+    return segments.join("/");
+  }, [nomorSurat, tanggalInput, sptjmType]);
+
   const handlePrint = () => {
+    const v = validate()
+    setErrors(v)
+    if (Object.keys(v).length > 0) {
+      const firstKey = Object.keys(v)[0]
+      const el = document.getElementById(`field-${firstKey}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     const printContents = document.getElementById("sptjm-print-area")?.innerHTML || "";
     const frame = document.createElement("iframe");
     frame.style.position = "fixed";
@@ -69,7 +163,7 @@ export default function GenerateSPTJM() {
           <Button variant="ghost" onClick={() => window.history.back()} className="px-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="text-lg font-semibold">SPTJM (khusus pejabat)</div>
+          <div className="text-lg font-semibold">SPTJM</div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -80,29 +174,86 @@ export default function GenerateSPTJM() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Nomor Surat</Label>
-                  <Input value={nomorSurat} onChange={(e) => setNomorSurat(e.target.value)} />
+                  <Label>Tipe SPTJM</Label>
+                  <Select value={sptjmType} onValueChange={(v: any) => setSptjmType(v)}>
+                    <SelectTrigger><SelectValue placeholder="Pilih tipe" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gelar">Pengantar Gelar</SelectItem>
+                      <SelectItem value="pensiun">Pengantar Pensiun</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Nomor (hanya angka & titik)</Label>
+                  <Input id="field-nomorSurat" value={nomorSurat} onChange={(e) => setNomorSurat(e.target.value.replace(/[^0-9.]/g, ""))} />
+                  {errors.nomorSurat && <div className="text-sm text-destructive mt-1">{errors.nomorSurat}</div>}
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <Label>Pejabat Penandatangan</Label>
-                  <PejabatSelector value={pejabat} onChange={setPejabat} />
+                  <div id="field-pejabat"><PejabatSelector value={pejabat} onChange={(v) => { setPejabat(v); setErrors((s) => ({ ...s, pejabat: v ? '' : s.pejabat })) }} /></div>
+                  {errors.pejabat && <div className="text-sm text-destructive">{errors.pejabat}</div>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Pilih Surat Pengantar</Label>
+                  <Select value={selectedLetterId} onValueChange={handleSelectLetter}>
+                    <SelectTrigger><SelectValue placeholder={letterOptions.length ? "Pilih salah satu" : "Tidak ada data"} /></SelectTrigger>
+                    <SelectContent>
+                      {letterOptions.map(opt => (
+                        <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.ref && <div className="text-sm text-destructive">{errors.ref}</div>}
+                </div>
                 <div className="space-y-2">
                   <Label>Nomor Surat Rujukan</Label>
-                  <Input value={nomorSuratRujukan} onChange={(e) => setNomorSuratRujukan(e.target.value)} />
+                  <Input value={nomorSuratRujukan} readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label>Tanggal Surat Rujukan</Label>
-                  <Input type="date" value={tanggalSuratRujukanInput} onChange={(e) => setTanggalSuratRujukanInput(e.target.value)} />
+                  <Input type="date" value={tanggalSuratRujukanInput} readOnly />
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <Label>Perihal Surat Rujukan</Label>
                   <Input value={perihalSuratRujukan} onChange={(e) => setPerihalSuratRujukan(e.target.value)} />
                 </div>
               </div>
+
+              {sptjmType === "pensiun" && (
+                <div className="space-y-3">
+                  <Label>Atas Nama</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PegawaiSelector value={null} onChange={(p) => {
+                      if (!p) return;
+                      setAtasNama((prev) => prev.find((x) => x.nip === p.nip) ? prev : [...prev, p]);
+                    }} />
+                  </div>
+                  {atasNama.length > 0 && (
+                    <div className="border rounded bg-background text-foreground">
+                      <div className="px-4 py-2 font-semibold">Daftar</div>
+                      <div className="p-4">
+                        <div className="space-y-2">
+                          {atasNama.map((p, i) => {
+                            const nipKey = (p.nip || "").replace(/\D+/g, "");
+                            return (
+                              <div key={nipKey} className="flex items-start justify-between gap-3 border-b py-2">
+                                <div>
+                                  {i + 1}. {p.name} — NIP. {nipKey}
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => setAtasNama((prev) => prev.filter((x) => (x.nip || "").replace(/\D+/g, "") !== nipKey))}>Hapus</Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {errors.atasNama && <div className="text-sm text-destructive">{errors.atasNama}</div>}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -111,13 +262,14 @@ export default function GenerateSPTJM() {
                 </div>
                 <div className="space-y-2">
                   <Label>Tanggal</Label>
-                  <Input type="date" value={tanggalInput} onChange={(e) => setTanggalInput(e.target.value)} />
+                  <Input id="field-tanggalInput" type="date" value={tanggalInput} onChange={(e) => setTanggalInput(e.target.value)} />
+                  {errors.tanggalInput && <div className="text-sm text-destructive">{errors.tanggalInput}</div>}
                 </div>
               </div>
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => window.history.back()}>Batal</Button>
-                <Button onClick={handlePrint}>Print / Download PDF</Button>
+                <Button onClick={handlePrint} disabled={!canPrint}>Print / Download PDF</Button>
               </div>
             </CardContent>
           </Card>
@@ -131,18 +283,34 @@ export default function GenerateSPTJM() {
                 <div className="min-w-[800px]">
                   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css" />
                   <div id="sptjm-print-area">
-                    <SPTJMTemplate
-                      logoUrl="/logo-kemenag.png"
-                      nomorSurat={nomorSurat}
-                      namaPenandatangan={pejabat?.name || ""}
-                      nipPenandatangan={pejabat?.nip || ""}
-                      jabatanPenandatangan={pejabat?.position || ""}
-                      nomorSuratRujukan={nomorSuratRujukan}
-                      tanggalSuratRujukanText={tanggalSuratRujukanText}
-                      perihalSuratRujukan={perihalSuratRujukan}
-                      tempat={tempat}
-                      tanggalText={tanggalText}
-                    />
+                    {sptjmType === "gelar" ? (
+                      <SPTJMTemplateGelar
+                        logoUrl="/logo-kemenag.png"
+                        nomorSurat={finalNomorSurat}
+                        namaPenandatangan={pejabat?.name || ""}
+                        nipPenandatangan={pejabat?.nip || ""}
+                        jabatanPenandatangan={pejabat?.position || ""}
+                        nomorSuratRujukan={nomorSuratRujukan}
+                        tanggalSuratRujukanText={tanggalSuratRujukanText}
+                        perihalSuratRujukan={perihalSuratRujukan || "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS"}
+                        tempat={tempat}
+                        tanggalText={tanggalText}
+                      />
+                    ) : (
+                      <SPTJMTemplatePensiun
+                        logoUrl="/logo-kemenag.png"
+                        nomorSurat={finalNomorSurat}
+                        namaPenandatangan={pejabat?.name || ""}
+                        nipPenandatangan={pejabat?.nip || ""}
+                        jabatanPenandatangan={pejabat?.position || ""}
+                        nomorSuratRujukan={nomorSuratRujukan}
+                        tanggalSuratRujukanText={tanggalSuratRujukanText}
+                        perihalSuratRujukan={perihalSuratRujukan || "Usul Pensiun BUP, J/D /KPP"}
+                        atasNama={atasNama.map(p => ({ nama: p.name, nip: p.nip }))}
+                        tempat={tempat}
+                        tanggalText={tanggalText}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

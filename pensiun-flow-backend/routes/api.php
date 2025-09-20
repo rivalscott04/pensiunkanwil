@@ -64,16 +64,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/impersonate', [AuthController::class, 'impersonate']);
     Route::post('/auth/stop-impersonate', [AuthController::class, 'stopImpersonate']);
     
-    // User management routes
-    Route::prefix('users')->group(function () {
+    // User management routes (superadmin only)
+    Route::middleware('role:superadmin')->prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{user}', [UserController::class, 'show']);
         Route::post('/', [UserController::class, 'store']);
         Route::put('/{user}', [UserController::class, 'update']);
         Route::delete('/{user}', [UserController::class, 'destroy']);
-        Route::get('/profile', [UserController::class, 'profile']);
-        Route::put('/profile', [UserController::class, 'updateProfile']);
     });
+    // Profile endpoints for any authenticated user
+    Route::get('/users/profile', [UserController::class, 'profile']);
+    Route::put('/users/profile', [UserController::class, 'updateProfile']);
     
     // Kabupaten routes
     Route::prefix('kabupaten')->group(function () {
@@ -91,16 +92,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{kabupaten}', [KabupatenController::class, 'show']);
     });
     
-    // Pengajuan routes
+    // Pengajuan routes (role-based)
     Route::prefix('pengajuan')->group(function () {
-        Route::get('/', [PengajuanController::class, 'index']);
-        Route::get('/stats', [PengajuanController::class, 'stats']);
-        Route::post('/', [PengajuanController::class, 'store']);
-        Route::get('/{pengajuan}', [PengajuanController::class, 'show']);
-        Route::put('/{pengajuan}', [PengajuanController::class, 'update']);
-        Route::delete('/{pengajuan}', [PengajuanController::class, 'destroy']);
-        Route::post('/{pengajuan}/submit', [PengajuanController::class, 'submit']);
-        Route::put('/{pengajuan}/status', [PengajuanController::class, 'updateStatus']);
+        // Read access: superadmin, adminpusat, operator
+        Route::middleware('any.role:superadmin,adminpusat,operator')->group(function () {
+            Route::get('/', [PengajuanController::class, 'index']);
+            Route::get('/stats', [PengajuanController::class, 'stats']);
+            Route::get('/{pengajuan}', [PengajuanController::class, 'show']);
+        });
+        // Create/Update by operator and superadmin
+        Route::middleware('any.role:superadmin,operator')->group(function () {
+            Route::post('/', [PengajuanController::class, 'store']);
+            Route::put('/{pengajuan}', [PengajuanController::class, 'update']);
+            Route::post('/{pengajuan}/submit', [PengajuanController::class, 'submit']);
+        });
+        // Status update & delete by superadmin only
+        Route::middleware('role:superadmin')->group(function () {
+            Route::put('/{pengajuan}/status', [PengajuanController::class, 'updateStatus']);
+            Route::delete('/{pengajuan}', [PengajuanController::class, 'destroy']);
+        });
     });
     // Aliases to match frontend (pension-applications)
     Route::prefix('pension-applications')->group(function () {
@@ -115,14 +125,23 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{pengajuan}/documents', [FileController::class, 'upload']);
     });
     
-    // File management routes
+    // File management routes (role-based)
     Route::prefix('files')->group(function () {
-        Route::post('/upload', [FileController::class, 'upload']);
-        Route::post('/bulk-upload', [FileController::class, 'bulkUpload']);
-        Route::get('/pengajuan/{pengajuan}', [FileController::class, 'getFiles']);
-        Route::get('/{file}/preview', [FileController::class, 'preview']);
-        Route::get('/{file}/download', [FileController::class, 'download'])->name('api.files.download');
-        Route::delete('/{file}', [FileController::class, 'destroy']);
+        // Upload by superadmin & operator
+        Route::middleware('any.role:superadmin,operator')->group(function () {
+            Route::post('/upload', [FileController::class, 'upload']);
+            Route::post('/bulk-upload', [FileController::class, 'bulkUpload']);
+        });
+        // Read/Download allowed for all roles including petugas
+        Route::middleware('any.role:superadmin,adminpusat,operator,petugas')->group(function () {
+            Route::get('/pengajuan/{pengajuan}', [FileController::class, 'getFiles']);
+            Route::get('/{file}/preview', [FileController::class, 'preview']);
+            Route::get('/{file}/download', [FileController::class, 'download'])->name('api.files.download');
+        });
+        // Delete by superadmin only
+        Route::middleware('role:superadmin')->group(function () {
+            Route::delete('/{file}', [FileController::class, 'destroy']);
+        });
     });
     // Aliases to match frontend (documents)
     Route::prefix('documents')->group(function () {
@@ -146,17 +165,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // One-off sync endpoints (protected versions kept for future if needed)
 
-    // Letters routes
+    // Letters routes (petugas & superadmin can CRUD; adminpusat read-only)
     Route::prefix('letters')->group(function () {
-        Route::get('/', [LetterController::class, 'index']);
-        Route::post('/', [LetterController::class, 'store']);
-        Route::get('/{letter}', [LetterController::class, 'show']);
-        Route::put('/{letter}', [LetterController::class, 'update']);
-        Route::delete('/{letter}', [LetterController::class, 'destroy']);
+        // Read list and detail
+        Route::middleware('any.role:superadmin,adminpusat,petugas')->group(function () {
+            Route::get('/', [LetterController::class, 'index']);
+            Route::get('/{letter}', [LetterController::class, 'show']);
+        });
+        // Create/Update/Delete
+        Route::middleware('any.role:superadmin,petugas')->group(function () {
+            Route::post('/', [LetterController::class, 'store']);
+            Route::put('/{letter}', [LetterController::class, 'update']);
+            Route::delete('/{letter}', [LetterController::class, 'destroy']);
+        });
     });
 
-    // Personnel search (protected) for letter generation
-    Route::get('/personnel/search', function (\Illuminate\Http\Request $request) {
+    // Personnel search (allow petugas to access for letter generation)
+    Route::middleware('any.role:superadmin,adminpusat,operator,petugas')->get('/personnel/search', function (\Illuminate\Http\Request $request) {
         $q = trim((string) $request->query('q', ''));
         $limit = (int) $request->query('limit', 20);
         if ($limit <= 0) { $limit = 20; }

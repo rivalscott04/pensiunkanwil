@@ -26,7 +26,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Shield, Search, LogOut } from "lucide-react"
-import { apiImpersonate, apiStopImpersonate, apiListUsers, apiMe, apiLogout } from "@/lib/api"
+import { apiImpersonate, apiStopImpersonate } from "@/lib/api"
+import { apiListUsersCached, invalidateCache } from "@/lib/api-cached"
+import { useAuth } from "@/hooks/use-auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
@@ -42,44 +44,44 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     href: "/dashboard",
     icon: Home,
-    allowedRoles: ["kanwil", "kabupaten", "pusat"]
+    allowedRoles: ["superadmin", "operator", "adminpusat", "petugas"]
   },
   {
     name: "Pengajuan Pensiun",
     href: "/pengajuan",
     icon: FileText,
-    allowedRoles: ["kanwil", "kabupaten"]
+    allowedRoles: ["superadmin", "adminpusat", "operator"]
   },
   {
     name: "Pegawai Pensiun",
     href: "/pegawai", 
     icon: Users,
-    allowedRoles: ["kanwil", "kabupaten", "pusat"]
+    allowedRoles: ["superadmin", "adminpusat", "operator"]
+  },
+  {
+    name: "User",
+    href: "/users",
+    icon: Settings,
+    allowedRoles: ["superadmin"]
   },
   {
     name: "Laporan",
     href: "/laporan",
     icon: BarChart3,
-    allowedRoles: ["pusat"]
-  },
-  {
-    name: "Kantor Wilayah",
-    href: "/kanwil",
-    icon: Building2,
-    allowedRoles: ["pusat"]
+    allowedRoles: ["adminpusat"]
   },
   {
     name: "Kabupaten/Kota",
     href: "/kabupaten",
     icon: MapPin,
-    allowedRoles: ["kanwil", "pusat"]
+    allowedRoles: ["superadmin", "adminpusat"]
   }
   ,
   {
     name: "Generate Surat",
     href: "/generate-surat",
     icon: FileText,
-    allowedRoles: ["kanwil", "kabupaten", "pusat"]
+    allowedRoles: ["superadmin", "petugas"]
   }
 ]
 
@@ -96,27 +98,53 @@ export function AppSidebar({ userRole = "kanwil", userName = "Admin User" }: App
   const [search, setSearch] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [items, setItems] = React.useState<any[]>([])
-  const [isImpersonating, setIsImpersonating] = React.useState(false)
+  const { impersonation, logout, refetchUser } = useAuth()
+  
+  const isImpersonating = impersonation?.is_impersonating || false
 
-  React.useEffect(() => {
-    let mounted = true
-    apiMe().then((res) => { if (!mounted) return; setIsImpersonating(Boolean(res?.impersonation?.is_impersonating)) }).catch(() => {})
-    return () => { mounted = false }
-  }, [])
+  // Debounced search for better performance
+  const [searchTimeout, setSearchTimeout] = React.useState<NodeJS.Timeout | null>(null)
 
-  const loadUsers = async (q: string) => {
+  const loadUsers = React.useCallback(async (q: string) => {
     setLoading(true)
     try {
-      const { items } = await apiListUsers({ search: q, perPage: 10 })
+      const { items } = await apiListUsersCached({ search: q, perPage: 10 })
       setItems(items || [])
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const filteredNavItems = navItems.filter(item => 
-    item.allowedRoles.includes(userRole)
-  )
+  const handleSearchChange = React.useCallback((value: string) => {
+    setSearch(value)
+    
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+    
+    // Set new timeout for debounced search
+    const timeout = setTimeout(() => {
+      loadUsers(value)
+    }, 300) // 300ms delay
+    
+    setSearchTimeout(timeout)
+  }, [searchTimeout, loadUsers])
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout)
+      }
+    }
+  }, [searchTimeout])
+
+  const filteredNavItems = navItems.filter(item => {
+    // Superadmin can see all menus
+    if (userRole === "superadmin") return true
+    return item.allowedRoles.includes(userRole)
+  })
 
   const isCollapsed = state === "collapsed"
 
@@ -150,7 +178,7 @@ export function AppSidebar({ userRole = "kanwil", userName = "Admin User" }: App
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-60">
+                <DropdownMenuContent align="start" className="w-60 animate-in slide-in-from-top-2 duration-300">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span className="font-medium">{userName}</span>
@@ -158,19 +186,33 @@ export function AppSidebar({ userRole = "kanwil", userName = "Admin User" }: App
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {!isImpersonating ? (
-                    <DropdownMenuItem onClick={() => { setImpersonateOpen(true); loadUsers('') }}>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Impersonate...
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem onClick={() => apiStopImpersonate().then(() => window.location.reload())}>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Stop Impersonate
-                    </DropdownMenuItem>
+                  {userRole === "superadmin" && (
+                    !isImpersonating ? (
+                      <DropdownMenuItem 
+                        onClick={() => { setImpersonateOpen(true); loadUsers(''); setSearch('') }}
+                        className="transition-all duration-200 hover:bg-accent/50"
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Impersonate...
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          invalidateCache()
+                          apiStopImpersonate().then(() => refetchUser())
+                        }}
+                        className="transition-all duration-200 hover:bg-accent/50"
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Stop Impersonate
+                      </DropdownMenuItem>
+                    )
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={async () => { await apiLogout(); window.location.href = '/login' }} className="text-destructive">
+                  <DropdownMenuItem 
+                    onClick={logout} 
+                    className="text-destructive transition-all duration-200 hover:bg-destructive/10"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Keluar
                   </DropdownMenuItem>
@@ -199,22 +241,22 @@ export function AppSidebar({ userRole = "kanwil", userName = "Admin User" }: App
                     <NavLink 
                       to={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-3 mx-3 rounded-lg transition-all duration-200 font-bold text-sm",
+                        "flex items-center gap-3 px-4 py-3 mx-3 rounded-lg transition-all duration-300 font-bold text-sm transform hover:scale-105 hover:shadow-md",
                         isActive 
-                          ? "bg-green-600 text-white shadow-lg dark:bg-orange-500 dark:text-white" 
+                          ? "bg-green-600 text-white shadow-lg dark:bg-orange-500 dark:text-white scale-105" 
                           : "text-[#000000] dark:text-[#ffffff] hover:bg-green-100 hover:text-[#000000] dark:hover:bg-orange-500/40 dark:hover:text-[#ffffff]"
                       )}
                     >
                       <item.icon 
                         className={cn(
-                          "h-5 w-5 shrink-0 stroke-[2.5]",
+                          "h-5 w-5 shrink-0 stroke-[2.5] transition-all duration-300",
                           isActive 
-                            ? "text-white" 
-                            : "text-[#000000] dark:text-[#ffffff]"
+                            ? "text-white transform scale-110" 
+                            : "text-[#000000] dark:text-[#ffffff] group-hover:scale-110"
                         )} 
                       />
                       {!isCollapsed && (
-                        <span className="truncate font-bold">{item.name}</span>
+                        <span className="truncate font-bold transition-all duration-300">{item.name}</span>
                       )}
                     </NavLink>
                   </SidebarMenuItem>
@@ -229,29 +271,46 @@ export function AppSidebar({ userRole = "kanwil", userName = "Admin User" }: App
 
       {/* Impersonate Modal */}
       <Dialog open={impersonateOpen} onOpenChange={setImpersonateOpen}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-[520px] animate-in slide-in-from-bottom-4 duration-300">
           <DialogHeader>
             <DialogTitle>Pilih User untuk Impersonate</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={search} onChange={(e) => { setSearch(e.target.value); loadUsers(e.target.value) }} placeholder="Cari nama, email, NIP..." className="pl-10" />
+              <Input 
+                value={search} 
+                onChange={(e) => handleSearchChange(e.target.value)} 
+                placeholder="Cari nama, email, NIP..." 
+                className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-primary/20" 
+              />
             </div>
             <div className="max-h-80 overflow-auto rounded border">
               {loading ? (
-                <div className="p-4 text-sm text-muted-foreground">Memuat...</div>
+                <div className="p-4 text-sm flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-green-600 dark:border-orange-400 border-t-transparent rounded-full"></div>
+                  <span className="text-green-600 dark:text-orange-400">Memuat...</span>
+                </div>
               ) : items.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground">Tidak ada user</div>
               ) : (
                 <ul className="divide-y">
                   {items.map((u) => (
-                    <li key={u.id} className="p-3 flex items-center justify-between">
+                    <li key={u.id} className="p-3 flex items-center justify-between hover:bg-accent/50 transition-all duration-200">
                       <div>
                         <div className="font-medium">{u.name}</div>
                         <div className="text-xs text-muted-foreground">{u.email} • {u.role}</div>
                       </div>
-                      <Button size="sm" onClick={() => apiImpersonate(u.id).then(() => window.location.reload())}>Impersonate</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => {
+                          invalidateCache()
+                          apiImpersonate(u.id).then(() => refetchUser())
+                        }}
+                        className="transition-all duration-200 hover:scale-105"
+                      >
+                        Impersonate
+                      </Button>
                     </li>
                   ))}
                 </ul>

@@ -57,7 +57,7 @@ export const KemenagDocumentTemplate: React.FC<KemenagTemplateProps> = (props) =
   return (
     <div className="w-full bg-white text-black">
       <style>{`
-        @page { size: A4; margin: 0; }
+        @page { size: auto; margin: 0; }
         @media print { body { -webkit-print-color-adjust: exact; } }
         .sheet { padding: 1.5cm 2cm; page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }

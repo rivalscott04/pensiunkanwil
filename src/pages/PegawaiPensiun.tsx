@@ -13,6 +13,12 @@ import { SuccessModal } from "@/components/pension/success-modal"
 import { ErrorModal } from "@/components/pension/error-modal"
 import { FileText } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { 
+  apiCreatePensionApplication, 
+  apiSubmitPensionApplication,
+  CreatePensionApplicationRequest,
+  PensionApplication 
+} from "@/lib/api"
 
 type ModalStep = 'none' | 'confirmation' | 'pension-type' | 'upload' | 'submit-confirmation' | 'success' | 'error'
 
@@ -26,6 +32,8 @@ export default function PegawaiPensiun() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionDate, setSubmissionDate] = useState<string>("")
   const [errorMessage, setErrorMessage] = useState<string>("")
+  const [pengajuanId, setPengajuanId] = useState<string | null>(null)
+  const [createdApplication, setCreatedApplication] = useState<PensionApplication | null>(null)
   const { toast } = useToast()
 
   // Handle navigation state from DocumentUpload page
@@ -87,24 +95,75 @@ export default function PegawaiPensiun() {
   }
 
   const handleFinalSubmit = async () => {
+    if (!selectedEmployee || !selectedPensionType) {
+      setErrorMessage("Data pegawai atau jenis pensiun tidak lengkap")
+      setCurrentModalStep('error')
+      return
+    }
+
     setIsSubmitting(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Random failure for demo (10% chance)
-      if (Math.random() < 0.1) {
-        throw new Error("Koneksi ke server terputus")
+      // Step 1: Create pension application
+      const applicationData: CreatePensionApplicationRequest = {
+        nip_pegawai: selectedEmployee.nip,
+        nama_pegawai: selectedEmployee.nama,
+        jabatan: selectedEmployee.jabatan,
+        unit_kerja: selectedEmployee.unitKerja,
+        pangkat_golongan: selectedEmployee.golongan,
+        tanggal_lahir: selectedEmployee.tanggalLahir,
+        tanggal_mulai_kerja: selectedEmployee.tanggalMulaiKerja,
+        masa_kerja_tahun: selectedEmployee.masaKerjaTahun,
+        masa_kerja_bulan: selectedEmployee.masaKerjaBulan,
+        gaji_pokok: selectedEmployee.gajiPokok,
+        jenis_pensiun: mapPensionTypeToBackend(selectedPensionType),
+        tanggal_pensiun: selectedEmployee.tmtPensiun,
+        catatan: `Pengajuan pensiun ${selectedPensionType.toUpperCase()} untuk ${selectedEmployee.nama}`
       }
+
+      const createdApp = await apiCreatePensionApplication(applicationData)
+      setCreatedApplication(createdApp)
+      setPengajuanId(createdApp.id)
+
+      // Step 2: Submit the application
+      const submittedApp = await apiSubmitPensionApplication(createdApp.id)
+      setCreatedApplication(submittedApp)
       
       setSubmissionDate(new Date().toISOString())
       setCurrentModalStep('success')
+      
+      toast({
+        title: "Pengajuan Berhasil",
+        description: `Pengajuan pensiun untuk ${selectedEmployee.nama} berhasil dikirim`,
+      })
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Terjadi kesalahan tidak terduga")
+      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan tidak terduga"
+      setErrorMessage(errorMessage)
       setCurrentModalStep('error')
+      
+      toast({
+        title: "Pengajuan Gagal",
+        description: errorMessage,
+        variant: "destructive"
+      })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Helper function to map frontend pension type to backend format
+  const mapPensionTypeToBackend = (type: string): 'normal' | 'dipercepat' | 'khusus' => {
+    switch (type) {
+      case 'bup':
+        return 'normal'
+      case 'sakit':
+        return 'khusus'
+      case 'janda_duda':
+        return 'khusus'
+      case 'aps':
+        return 'dipercepat'
+      default:
+        return 'normal'
     }
   }
 
@@ -115,6 +174,8 @@ export default function PegawaiPensiun() {
     setUploadedFiles([])
     setSubmissionDate("")
     setErrorMessage("")
+    setPengajuanId(null)
+    setCreatedApplication(null)
   }
 
   const handleRetrySubmission = () => {

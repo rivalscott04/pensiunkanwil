@@ -25,6 +25,8 @@ class Letter extends Model
         'signature_mode',
         'signature_anchor',
         'template_version',
+        'type',
+        'perihal',
     ];
 
     protected $casts = [

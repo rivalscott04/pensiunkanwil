@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
 import { PengantarPensiunTemplate, PengantarPensiunRow } from "@/components/pension/PengantarPensiunTemplate";
+import { saveLetterService } from "@/lib/letters-service";
 
 export default function GeneratePengantarPensiun() {
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);
@@ -27,6 +28,17 @@ export default function GeneratePengantarPensiun() {
       if (prev.find((x) => x.nip === p.nip)) return prev;
       return [...prev, p];
     });
+    
+    // Auto-fill golongan and jabatan from API data
+    const nipKey = (p.nip || "").replace(/\D+/g, "");
+    setRowExtras((prev) => ({
+      ...prev,
+      [nipKey]: {
+        gol: p.golongan || prev[nipKey]?.gol || "",
+        job: p.position || prev[nipKey]?.job || "",
+        ket: prev[nipKey]?.ket || "",
+      }
+    }));
   };
 
   const removePegawai = (nip?: string) => {
@@ -110,6 +122,30 @@ export default function GeneratePengantarPensiun() {
       waitForImages().then(() => { win?.focus(); win?.print(); setTimeout(() => document.body.removeChild(frame), 1000); });
     } else { setTimeout(() => document.body.removeChild(frame), 1000); }
   };
+
+  const handleSaveBackend = async () => {
+    try {
+      const payload: any = {
+        id: "",
+        nomorSurat: nomorSurat,
+        tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+        namaPegawai: pegawaiList[0]?.name || "",
+        nipPegawai: pegawaiList[0]?.nip || "",
+        posisiPegawai: pegawaiList[0]?.position || "",
+        unitPegawai: pegawaiList[0]?.unit || "",
+        namaPenandatangan: pejabat?.name || "",
+        nipPenandatangan: pejabat?.nip || "",
+        jabatanPenandatangan: pejabat?.position || "",
+        signaturePlace: tempat,
+        signatureDateInput: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+        signatureMode,
+        signatureAnchor: "^",
+        type: "pengantar_pensiun",
+        perihal: "Usul Pensiun BUP, J/D /KPP",
+      }
+      await saveLetterService(payload)
+    } catch {}
+  }
 
   return (
     <AppLayout>
@@ -206,10 +242,19 @@ export default function GeneratePengantarPensiun() {
                                 <div className="text-xs text-muted-foreground">NIP. {nipKey}</div>
                               </td>
                               <td className="p-2 align-top w-24">
-                                <Input value={rowExtras[nipKey]?.gol || ""} onChange={(e) => setExtra(nipKey, "gol", e.target.value)} placeholder="IV/a" />
+                                <Input 
+                                  value={rowExtras[nipKey]?.gol || ""} 
+                                  onChange={(e) => setExtra(nipKey, "gol", e.target.value)} 
+                                  placeholder="IV/a"
+                                  className="text-center"
+                                />
                               </td>
                               <td className="p-2 align-top">
-                                <Input value={rowExtras[nipKey]?.job || ""} onChange={(e) => setExtra(nipKey, "job", e.target.value)} placeholder="Guru ... di ..." />
+                                <Input 
+                                  value={rowExtras[nipKey]?.job || ""} 
+                                  onChange={(e) => setExtra(nipKey, "job", e.target.value)} 
+                                  placeholder="Jabatan/Tempat Tugas"
+                                />
                               </td>
                               <td className="p-2 align-top w-20">
                                 <Input value={rowExtras[nipKey]?.ket || ""} onChange={(e) => setExtra(nipKey, "ket", e.target.value)} placeholder="BUP/J/D" />
@@ -228,7 +273,7 @@ export default function GeneratePengantarPensiun() {
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => window.history.back()}>Batal</Button>
-                <Button onClick={handlePrint}>Print / Download PDF</Button>
+                <Button onClick={async () => { await handleSaveBackend(); handlePrint(); }}>Print / Download PDF</Button>
               </div>
             </CardContent>
           </Card>
@@ -251,6 +296,8 @@ export default function GeneratePengantarPensiun() {
                       rows={rows}
                       signatureMode={signatureMode}
                       signatureAnchor={signatureAnchor}
+                      penandatanganNama={pejabat?.name || ""}
+                      penandatanganNip={pejabat?.nip || ""}
                     />
                   </div>
                 </div>

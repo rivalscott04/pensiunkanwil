@@ -5,10 +5,104 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { KemenagDocumentTemplate } from "@/components/pension/KemenagDocumentTemplate"
 import { getLetters } from "@/lib/letters"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { GraduationCap, Briefcase, FileSignature, FileText, Search } from "lucide-react"
 
 export default function SuratIndex() {
+  const [pickerOpen, setPickerOpen] = React.useState(false)
+  const [pickerSearch, setPickerSearch] = React.useState("")
+  const [pickerTab, setPickerTab] = React.useState<"all" | "pensiun" | "gelar" | "sptjm" | "lainnya">("all")
+
   const handleCreate = () => {
-    window.location.href = "/generate-surat/new"
+    setPickerOpen(true)
+  }
+
+  type LetterTypeOption = {
+    id: string
+    label: string
+    description: string
+    category: "pensiun" | "gelar" | "sptjm" | "lainnya"
+    route: string
+    keywords?: string[]
+    badge?: string
+  }
+
+  const LETTER_TYPES: LetterTypeOption[] = React.useMemo(() => [
+    {
+      id: "pengantar_pensiun",
+      label: "Pengantar Pensiun",
+      description: "Surat pengantar usul pensiun (BUP/J/D/KPP)",
+      category: "pensiun",
+      route: "/generate-surat/pengantar-pensiun",
+      keywords: ["pensiun", "usul", "bup", "kpp"],
+    },
+    {
+      id: "pengantar_gelar",
+      label: "Pengantar Gelar",
+      description: "Surat pengantar pengakuan/penyematan gelar",
+      category: "gelar",
+      route: "/generate-surat/pengantar-gelar",
+      keywords: ["gelar", "pendidikan", "pengakuan"],
+    },
+    {
+      id: "sptjm_gelar",
+      label: "SPTJM (Pengantar Gelar)",
+      description: "Surat Pernyataan Tanggung Jawab Mutlak untuk pengantar gelar",
+      category: "sptjm",
+      route: "/generate-surat/sptjm?type=gelar",
+      keywords: ["sptjm", "gelar"],
+    },
+    {
+      id: "sptjm_pensiun",
+      label: "SPTJM (Pengantar Pensiun)",
+      description: "SPTJM untuk pengantar pensiun dengan daftar atas nama",
+      category: "sptjm",
+      route: "/generate-surat/sptjm?type=pensiun",
+      keywords: ["sptjm", "pensiun"],
+    },
+    {
+      id: "surat_keterangan_meninggal",
+      label: "Surat Keterangan Meninggal",
+      description: "Keterangan meninggal dunia",
+      category: "lainnya",
+      route: "/generate-surat/meninggal",
+      keywords: ["meninggal", "keterangan"],
+    },
+    {
+      id: "hukuman_disiplin",
+      label: "Surat Hukuman Disiplin",
+      description: "Surat Hukuman Disiplin Kemenag",
+      category: "lainnya",
+      route: "/generate-surat/hukuman-disiplin",
+      keywords: ["hukuman", "disiplin", "kemenag", "sanksi"],
+    },
+  ], [])
+
+  const lastUsedKey = "pf_last_letter_type"
+  const lastUsedId = React.useMemo(() => {
+    try { return localStorage.getItem(lastUsedKey) || "" } catch { return "" }
+  }, [])
+
+  const filteredTypes = React.useMemo(() => {
+    const q = (pickerSearch || "").trim().toLowerCase()
+    return LETTER_TYPES.filter(t => (pickerTab === "all" || t.category === pickerTab))
+      .filter(t => q === "" || [t.label, t.description, ...(t.keywords || [])].join(" ").toLowerCase().includes(q))
+  }, [LETTER_TYPES, pickerTab, pickerSearch])
+
+  const getIconFor = (opt: LetterTypeOption) => {
+    if (opt.id.startsWith("pengantar_gelar")) return <GraduationCap className="h-5 w-5" />
+    if (opt.id.startsWith("pengantar_pensiun")) return <Briefcase className="h-5 w-5" />
+    if (opt.id.startsWith("sptjm")) return <FileSignature className="h-5 w-5" />
+    if (opt.id.includes("meninggal")) return <FileText className="h-5 w-5" />
+    return <FileText className="h-5 w-5" />
+  }
+
+  const handlePick = (opt: LetterTypeOption) => {
+    try { localStorage.setItem(lastUsedKey, opt.id) } catch {}
+    window.location.href = opt.route
   }
 
   // Print modal state
@@ -79,7 +173,7 @@ export default function SuratIndex() {
           onCreateNew={handleCreate}
           onView={(item) => { setViewLetterId(item.id); setViewOpen(true) }}
           onEdit={(item) => {
-            window.location.href = `/generate-surat/new?edit=${encodeURIComponent(item.id)}`
+            window.location.href = `/generate-surat/hukuman-disiplin?edit=${encodeURIComponent(item.id)}`
           }}
           onPrint={(item) => {
             setPrintLetterId(item.id)
@@ -163,6 +257,83 @@ export default function SuratIndex() {
                 </Table>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Picker dialog */}
+        <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+          <DialogContent className="max-w-[840px]">
+            <DialogHeader>
+              <DialogTitle>Pilih Jenis Surat</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={pickerSearch}
+                  onChange={(e) => setPickerSearch(e.target.value.replace(/\s{2,}/g, " "))}
+                  placeholder="Cari jenis surat..." className="pl-10" aria-label="Cari jenis surat"
+                />
+              </div>
+              <Tabs value={pickerTab} onValueChange={(v: any) => setPickerTab(v)}>
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="all">Semua</TabsTrigger>
+                  <TabsTrigger value="pensiun">Pensiun</TabsTrigger>
+                  <TabsTrigger value="gelar">Gelar</TabsTrigger>
+                  <TabsTrigger value="sptjm">SPTJM</TabsTrigger>
+                  <TabsTrigger value="lainnya">Lainnya</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              {lastUsedId && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-muted-foreground">Terakhir digunakan</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {LETTER_TYPES.filter(t => t.id === lastUsedId).map(opt => (
+                      <Card key={`recent-${opt.id}`} className="hover:border-primary focus-within:ring-2 focus-within:ring-primary transition cursor-pointer"
+                        role="button" tabIndex={0} aria-label={`Pilih ${opt.label}`}
+                        onClick={() => handlePick(opt)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handlePick(opt) }}>
+                        <CardContent className="p-4 flex items-start gap-3">
+                          <div className="mt-0.5 text-primary">{getIconFor(opt)}</div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium truncate">{opt.label}</div>
+                              <Badge variant="secondary" className="uppercase">{opt.category}</Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground line-clamp-2">{opt.description}</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredTypes.length === 0 ? (
+                  <div className="col-span-full text-sm text-muted-foreground">Tidak ada jenis surat yang cocok. Coba reset filter.</div>
+                ) : (
+                  filteredTypes.map(opt => (
+                    <Card key={opt.id} className="hover:border-primary focus-within:ring-2 focus-within:ring-primary transition cursor-pointer"
+                      role="button" tabIndex={0} aria-label={`Pilih ${opt.label}`}
+                      onClick={() => handlePick(opt)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handlePick(opt) }}>
+                      <CardContent className="p-4 flex items-start gap-3">
+                        <div className="mt-0.5 text-primary">{getIconFor(opt)}</div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium truncate">{opt.label}</div>
+                            <Badge variant="secondary" className="uppercase">{opt.category}</Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground line-clamp-2">{opt.description}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

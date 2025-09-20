@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
 import { PengantarPenyematanGelarTemplate, PengantarPenyematanGelarRow } from "@/components/pension/PengantarPenyematanGelarTemplate";
+import { saveLetterService } from "@/lib/letters-service";
 
 export default function GeneratePengantarGelar() {
   const url = new URL(window.location.href);
@@ -128,6 +129,31 @@ export default function GeneratePengantarGelar() {
       setTimeout(() => document.body.removeChild(frame), 1000);
     }
   };
+
+  const handleSaveBackend = async () => {
+    // Save minimal letter metadata to backend for later SPTJM reference
+    try {
+      const payload: any = {
+        id: "",
+        nomorSurat: finalNomorSurat,
+        tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+        namaPegawai: pegawaiList[0]?.name || "",
+        nipPegawai: pegawaiList[0]?.nip || "",
+        posisiPegawai: pegawaiList[0]?.position || "",
+        unitPegawai: pegawaiList[0]?.unit || "",
+        namaPenandatangan: pejabat?.name || "",
+        nipPenandatangan: pejabat?.nip || "",
+        jabatanPenandatangan: pejabat?.position || "",
+        signaturePlace: tempat,
+        signatureDateInput: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+        signatureMode,
+        signatureAnchor: "^",
+        type: "pengantar_gelar",
+        perihal: "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS",
+      }
+      await saveLetterService(payload)
+    } catch {}
+  }
 
   return (
     <AppLayout>
@@ -258,7 +284,7 @@ export default function GeneratePengantarGelar() {
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => window.history.back()}>Batal</Button>
-                <Button onClick={handlePrint}>Print / Download PDF</Button>
+                <Button onClick={async () => { await handleSaveBackend(); handlePrint(); }}>Print / Download PDF</Button>
               </div>
             </CardContent>
           </Card>

@@ -226,17 +226,18 @@ export default function CreateSurat() {
       signatureMode,
       signatureAnchor,
     };
+    const payload = { ...(letter as any), type: 'hukuman_disiplin' } as any;
     try {
       setSaving(true)
       // Save to backend if configured, otherwise local storage
-      const saved = await saveLetterService(editId ? letter : { ...letter, id: "" as unknown as string })
+      const saved = await saveLetterService(editId ? (payload as any) : { ...(payload as any), id: "" as unknown as string })
       if (!saved) {
-        saveLocalLetter(letter)
+        saveLocalLetter(payload as any)
       }
       setPrintModalOpen(true)
     } catch (e) {
       // Fallback to local save so user does not lose work
-      try { saveLocalLetter(letter) } catch {}
+      try { saveLocalLetter(payload as any) } catch {}
       setErrorModalOpen(true)
     } finally {
       setSaving(false)
@@ -251,7 +252,7 @@ export default function CreateSurat() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Generate Surat</CardTitle>
+                <CardTitle>Surat Hukuman Disiplin</CardTitle>
                 <Button variant="outline" size="sm" onClick={() => (window.location.href = "/generate-surat")}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Kembali
@@ -446,7 +447,7 @@ export default function CreateSurat() {
         setPrintModalOpen(o)
         if (!o) {
           // After closing success, navigate to index so it refreshes
-          window.location.href = "/surat"
+          window.location.href = "/generate-surat"
         }
       }}>
         <DialogContent className="sm:max-w-[420px]">

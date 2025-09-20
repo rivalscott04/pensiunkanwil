@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['operator', 'superadmin', 'adminpusat'])->default('operator');
+            $table->enum('role', ['superadmin', 'adminpusat', 'operator', 'petugas'])->default('operator');
             $table->foreignId('kabupaten_id')->nullable()->constrained('kabupaten')->onDelete('set null');
             $table->string('jabatan', 255)->nullable();
             $table->enum('status_user', ['aktif', 'nonaktif'])->default('aktif');

@@ -92,12 +92,8 @@ export function ApplicationDetailModal({ isOpen, onClose, application }: Applica
     })
   }
 
-  // Mock data untuk demo
-  const documents = [
-    { name: "KTP.pdf", size: "2.1 MB", uploadDate: "2024-01-15" },
-    { name: "Surat_Permohonan.pdf", size: "1.8 MB", uploadDate: "2024-01-15" },
-    { name: "SK_Terakhir.pdf", size: "3.2 MB", uploadDate: "2024-01-16" }
-  ]
+  // Mock data removed - now using real API data
+  const documents: any[] = []
 
   const statusHistory = [
     { status: "Draft", date: "2024-01-15 09:00", user: "Pegawai", note: "Pengajuan dibuat" },

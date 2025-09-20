@@ -8,10 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoginIllustration } from "@/components/illustrations/LoginIllustration"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [errorOpen, setErrorOpen] = useState(false)
   const [formData, setFormData] = useState({
     username: "",
     password: ""
@@ -19,23 +22,49 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    // basic input validation
+    const email = formData.username.trim()
+    const password = formData.password
+    if (!email || !password) {
+      setError("Email dan password wajib diisi. Silakan cek kembali.")
+      setErrorOpen(true)
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError("Format email tidak valid. Silakan periksa alamat email Anda.")
+      setErrorOpen(true)
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: formData.username, password: formData.password })
+        body: JSON.stringify({ email, password })
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.message || 'Login gagal')
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 422) {
+          setError('Email dan password tidak sesuai. Silakan cek kembali.')
+          setErrorOpen(true)
+          return
+        }
+        setError('Terjadi kendala saat masuk. Silakan coba lagi beberapa saat.')
+        setErrorOpen(true)
+        return
+      }
       // store token (for Authorization header fallback)
       try { localStorage.setItem('auth_token', json?.data?.token || '') } catch {}
       // redirect
       window.location.href = '/dashboard'
     } catch (err) {
+      setError('Terjadi kendala jaringan. Silakan coba lagi.')
+      setErrorOpen(true)
+    } finally {
       setLoading(false)
-      alert((err as Error).message)
     }
   }
 
@@ -186,6 +215,16 @@ export default function Login() {
                 </AppButton>
 
               </form>
+              {/* Error Dialog - modern style consistent with ConfirmDialog */}
+              <ConfirmDialog
+                open={errorOpen}
+                onOpenChange={setErrorOpen}
+                title="Tidak dapat masuk"
+                description={error || 'Email dan password tidak sesuai. Silakan cek kembali.'}
+                confirmText="Mengerti"
+                cancelText="Tutup"
+                onConfirm={() => setErrorOpen(false)}
+              />
 
               <div className="mt-6 text-center">
                 <AppText size="xs" color="muted">

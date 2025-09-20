@@ -16,28 +16,34 @@ class KabupatenController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Kabupaten::query();
+        // Cache key based on request parameters
+        $cacheKey = 'kabupaten_list_' . md5(serialize($request->all()));
+        
+        // Use cache for frequently accessed data (5 minutes)
+        $kabupaten = Cache::remember($cacheKey, 300, function () use ($request) {
+            $query = Kabupaten::query();
 
-        // Apply filters
-        if ($request->has('jenis')) {
-            $query->where('jenis', $request->jenis);
-        }
+            // Apply filters
+            if ($request->has('jenis')) {
+                $query->where('jenis', $request->jenis);
+            }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('kode', 'like', "%{$search}%")
-                  ->orWhere('kepala_daerah', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%")
+                      ->orWhere('kode', 'like', "%{$search}%")
+                      ->orWhere('kepala_daerah', 'like', "%{$search}%");
+                });
+            }
 
-        // Get paginated results
-        $kabupaten = $query->orderBy('nama')->paginate($request->get('per_page', 15));
+            // Get paginated results
+            return $query->orderBy('nama')->paginate($request->get('per_page', 15));
+        });
 
         return response()->json([
             'status' => 'success',
@@ -46,11 +52,55 @@ class KabupatenController extends Controller
     }
 
     /**
+     * Get active kabupaten only (cached)
+     */
+    public function active(): JsonResponse
+    {
+        // Cache active kabupaten for 10 minutes
+        $kabupaten = Cache::remember('kabupaten_active', 600, function () {
+            return Kabupaten::active()
+                ->select('id', 'nama', 'kode')
+                ->orderBy('nama')
+                ->get();
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $kabupaten
+        ]);
+    }
+
+    /**
+     * Get kabupaten statistics (cached)
+     */
+    public function stats(): JsonResponse
+    {
+        // Cache stats for 5 minutes
+        $stats = Cache::remember('kabupaten_stats', 300, function () {
+            return [
+                'total' => Kabupaten::count(),
+                'active' => Kabupaten::active()->count(),
+                'kabupaten' => Kabupaten::kabupaten()->count(),
+                'kota' => Kabupaten::kota()->count(),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $stats
+        ]);
+    }
+
+    /**
      * Display the specified kabupaten.
      */
     public function show(Kabupaten $kabupaten): JsonResponse
     {
-        $kabupaten->load(['users', 'pengajuan']);
+        // Optimized eager loading with specific columns and limits
+        $kabupaten->load([
+            'users:id,name,email,role,jabatan,status_user',
+            'pengajuan:id,nomor_pengajuan,nama_pegawai,status,jenis_pensiun,created_at'
+        ]);
 
         return response()->json([
             'status' => 'success',

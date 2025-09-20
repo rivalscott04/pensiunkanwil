@@ -13,12 +13,23 @@ class LetterController extends Controller
     {
         $query = Letter::query();
 
+        if ($type = $request->query('type')) {
+            $query->where('type', $type);
+        }
+
         if ($s = $request->query('q')) {
             $query->where(function ($q) use ($s) {
                 $q->where('nomor_surat', 'like', "%$s%")
                   ->orWhere('nama_pegawai', 'like', "%$s%")
                   ->orWhere('nama_penandatangan', 'like', "%$s%");
             });
+        }
+
+        if ($start = $request->query('start_date')) {
+            $query->whereDate('tanggal_surat', '>=', $start);
+        }
+        if ($end = $request->query('end_date')) {
+            $query->whereDate('tanggal_surat', '<=', $end);
         }
 
         if ($request->boolean('paginate', true)) {
@@ -77,6 +88,8 @@ class LetterController extends Controller
             'signature_mode' => [ 'required', 'in:manual,tte' ],
             'signature_anchor' => [ 'required', 'in:^,$,#' ],
             'template_version' => [ 'required', 'string' ],
+            'type' => [ 'nullable', 'string' ],
+            'perihal' => [ 'nullable', 'string' ],
         ]);
     }
 }

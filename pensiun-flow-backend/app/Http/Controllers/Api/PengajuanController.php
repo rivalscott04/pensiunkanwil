@@ -18,7 +18,13 @@ class PengajuanController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Pengajuan::with(['user', 'kabupaten', 'files']);
+        // Optimized eager loading to prevent N+1 queries
+        $query = Pengajuan::with([
+            'user:id,name,email,role',
+            'kabupaten:id,nama,kode',
+            'files:id,pengajuan_id,nama_file,jenis_dokumen,is_required',
+            'approvedBy:id,name,email'
+        ]);
 
         // Ensure authenticated (avoid redirect to route('login'))
         $user = $request->user();
@@ -51,7 +57,7 @@ class PengajuanController extends Controller
             });
         }
 
-        // Get paginated results
+        // Get paginated results with optimized query
         $pengajuan = $query->orderBy('created_at', 'desc')
                            ->paginate($request->get('per_page', 15));
 
@@ -75,7 +81,13 @@ class PengajuanController extends Controller
             ], 403);
         }
 
-        $pengajuan->load(['user', 'kabupaten', 'files', 'approvedBy']);
+        // Optimized eager loading with specific columns
+        $pengajuan->load([
+            'user:id,name,email,role,jabatan',
+            'kabupaten:id,nama,kode,kepala_daerah',
+            'files:id,pengajuan_id,nama_file,nama_asli,jenis_dokumen,is_required,keterangan,created_at',
+            'approvedBy:id,name,email,role'
+        ]);
 
         return response()->json([
             'status' => 'success',
@@ -394,7 +406,7 @@ class PengajuanController extends Controller
     }
 
     /**
-     * Get pengajuan statistics.
+     * Get pengajuan statistics (cached).
      */
     public function stats(): JsonResponse
     {
@@ -402,22 +414,29 @@ class PengajuanController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        $query = Pengajuan::query();
 
-        // Apply role-based filtering
-        if ($user->isOperator()) {
-            $query->where('kabupaten_id', $user->kabupaten_id);
-        }
+        // Create cache key based on user role and kabupaten
+        $cacheKey = 'pengajuan_stats_' . $user->id . '_' . ($user->kabupaten_id ?? 'all');
+        
+        // Cache stats for 2 minutes
+        $stats = Cache::remember($cacheKey, 120, function () use ($user) {
+            $query = Pengajuan::query();
 
-        $stats = [
-            'total' => $query->count(),
-            'draft' => $query->clone()->draft()->count(),
-            'submitted' => $query->clone()->submitted()->count(),
-            'approved' => $query->clone()->approved()->count(),
-            'rejected' => $query->clone()->rejected()->count(),
-            'this_month' => $query->clone()->whereMonth('created_at', now()->month)->count(),
-            'this_year' => $query->clone()->whereYear('created_at', now()->year)->count()
-        ];
+            // Apply role-based filtering
+            if ($user->isOperator()) {
+                $query->where('kabupaten_id', $user->kabupaten_id);
+            }
+
+            return [
+                'total' => $query->count(),
+                'draft' => $query->clone()->draft()->count(),
+                'submitted' => $query->clone()->submitted()->count(),
+                'approved' => $query->clone()->approved()->count(),
+                'rejected' => $query->clone()->rejected()->count(),
+                'this_month' => $query->clone()->whereMonth('created_at', now()->month)->count(),
+                'this_year' => $query->clone()->whereYear('created_at', now()->year)->count()
+            ];
+        });
 
         return response()->json([
             'status' => 'success',

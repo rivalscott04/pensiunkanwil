@@ -73,8 +73,8 @@ export function HeroIllustration({ className = "" }: HeroIllustrationProps) {
         <circle cx="0" cy="0" r="8" fill="currentColor" className="text-success" />
         <circle cx="0" cy="20" r="8" fill="currentColor" className="text-success" />
         <circle cx="0" cy="40" r="8" fill="currentColor" className="text-orange/30" />
-        <path d="-3 -2 L-1 0 L3 -4" stroke="white" strokeWidth="1.5" fill="none" />
-        <path d="-3 18 L-1 20 L3 16" stroke="white" strokeWidth="1.5" fill="none" />
+        <path d="M-3 -2 L-1 0 L3 -4" stroke="white" strokeWidth="1.5" fill="none" />
+        <path d="M-3 18 L-1 20 L3 16" stroke="white" strokeWidth="1.5" fill="none" />
       </g>
     </svg>
   );

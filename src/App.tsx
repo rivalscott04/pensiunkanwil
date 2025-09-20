@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/hooks/use-auth";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -19,6 +20,7 @@ import GeneratePengantarGelar from "./pages/GeneratePengantarGelar";
 import GenerateSPTJM from "./pages/GenerateSPTJM";
 import GeneratePengantarPensiun from "./pages/GeneratePengantarPensiun";
 import NotFound from "./pages/NotFound";
+import UsersPage from "./pages/Users";
 
 const queryClient = new QueryClient();
 
@@ -33,25 +35,33 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pengajuan" element={<Pengajuan />} />
-            <Route path="/pengajuan/detail/:id" element={<DetailPengajuan />} />
-            <Route path="/pegawai" element={<PegawaiPensiun />} />
-            <Route path="/pengajuan/upload" element={<DocumentUpload />} />
-            <Route path="/generate-surat" element={<SuratIndex />} />
-            <Route path="/generate-surat/new" element={<CreateSurat />} />
-            <Route path="/generate-surat/meninggal" element={<GenerateSuratMeninggal />} />
-            <Route path="/generate-surat/pengantar-gelar" element={<GeneratePengantarGelar />} />
-            <Route path="/generate-surat/pengantar-pensiun" element={<GeneratePengantarPensiun />} />
-            <Route path="/generate-surat/sptjm" element={<GenerateSPTJM />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/pengajuan" element={<Pengajuan />} />
+              <Route path="/pengajuan/detail/:id" element={<DetailPengajuan />} />
+              <Route path="/pegawai" element={<PegawaiPensiun />} />
+              <Route path="/pengajuan/upload" element={<DocumentUpload />} />
+              <Route path="/generate-surat" element={<SuratIndex />} />
+              <Route path="/generate-surat/hukuman-disiplin" element={<CreateSurat />} />
+              <Route path="/generate-surat/meninggal" element={<GenerateSuratMeninggal />} />
+              <Route path="/generate-surat/pengantar-gelar" element={<GeneratePengantarGelar />} />
+              <Route path="/generate-surat/pengantar-pensiun" element={<GeneratePengantarPensiun />} />
+              <Route path="/generate-surat/sptjm" element={<GenerateSPTJM />} />
+              <Route path="/users" element={<UsersPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

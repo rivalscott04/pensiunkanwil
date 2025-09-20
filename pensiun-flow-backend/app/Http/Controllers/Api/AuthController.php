@@ -108,11 +108,9 @@ class AuthController extends Controller
     {
         $user = $request->user()->load('kabupaten');
 
-        // Detect impersonation state
-        /** @var ImpersonateManager $impersonate */
-        $impersonate = app(ImpersonateManager::class);
-        $isImpersonating = $impersonate->isImpersonating();
-        $impersonator = $isImpersonating ? $impersonate->getImpersonator() : null;
+        // Detect impersonation state using session
+        $isImpersonating = session()->has('impersonate_id');
+        $impersonator = $isImpersonating ? User::find(session('impersonator_id')) : null;
         $impersonated = $isImpersonating ? $user : null; // current user is the impersonated account
 
         return response()->json([
@@ -187,8 +185,13 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Start impersonation
-        $impersonate->start($request, $targetUser);
+        // Start impersonation using token-based approach for API
+        // Create a new token for the target user
+        $targetUser->tokens()->delete(); // Remove existing tokens
+        $token = $targetUser->createToken('impersonate-token')->plainTextToken;
+        
+        // Store impersonation info in session for tracking
+        session(['impersonate_id' => $targetUser->id, 'impersonator_id' => $user->id]);
 
         // Log activity
         ActivityLog::create([
@@ -212,7 +215,9 @@ class AuthController extends Controller
                     'name' => $targetUser->name,
                     'email' => $targetUser->email,
                     'role' => $targetUser->role
-                ]
+                ],
+                'token' => $token,
+                'token_type' => 'Bearer'
             ]
         ]);
     }
@@ -220,28 +225,41 @@ class AuthController extends Controller
     /**
      * Stop impersonation
      */
-    public function stopImpersonate(Request $request, ImpersonateManager $impersonate): JsonResponse
+    public function stopImpersonate(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $impersonatedUser = $impersonate->getImpersonated();
-
-        if (!$impersonatedUser) {
+        $impersonatedUserId = session('impersonate_id');
+        
+        if (!$impersonatedUserId) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'No active impersonation'
             ], 400);
         }
 
-        // Stop impersonation
-        $impersonate->stop();
+        $impersonatedUser = User::find($impersonatedUserId);
+        $originalUser = User::find(session('impersonator_id'));
+
+        if (!$originalUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Original user not found'
+            ], 400);
+        }
+
+        // Stop impersonation - get original user's token
+        session()->forget(['impersonate_id', 'impersonator_id']);
+        
+        // Create new token for original user
+        $originalUser->tokens()->delete();
+        $token = $originalUser->createToken('auth-token')->plainTextToken;
 
         // Log activity
         ActivityLog::create([
-            'user_id' => $user->id,
+            'user_id' => $originalUser->id,
             'action' => 'stop_impersonate',
-            'description' => "User {$user->name} stopped impersonating user {$impersonatedUser->name}",
+            'description' => "User {$originalUser->name} stopped impersonating user {$impersonatedUser?->name}",
             'model_type' => User::class,
-            'model_id' => $impersonatedUser->id,
+            'model_id' => $impersonatedUserId,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'route' => $request->route()->getName(),
@@ -250,7 +268,11 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Impersonation stopped successfully'
+            'message' => 'Impersonation stopped successfully',
+            'data' => [
+                'token' => $token,
+                'token_type' => 'Bearer'
+            ]
         ]);
     }
 }

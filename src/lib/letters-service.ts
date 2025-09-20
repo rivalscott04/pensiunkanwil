@@ -37,6 +37,10 @@ function fromApi(api: any): StoredLetter {
     signatureDateInput: api.signature_date_input,
     signatureMode: api.signature_mode,
     signatureAnchor: api.signature_anchor,
+    // @ts-ignore extend
+    type: api.type,
+    // @ts-ignore extend
+    perihal: api.perihal,
   }
 }
 
@@ -57,6 +61,9 @@ function toApi(ui: StoredLetter): any {
     signature_mode: ui.signatureMode,
     signature_anchor: ui.signatureAnchor,
     template_version: 'v1',
+    // extra meta when provided via type assertion
+    type: (ui as any).type ?? null,
+    perihal: (ui as any).perihal ?? null,
   }
 }
 
@@ -64,6 +71,35 @@ export async function listLetters(): Promise<StoredLetter[]> {
   if (!useApi) return getLocalLetters()
   // Request non-paginated list for simplicity
   const items = await http<any[]>(`/api/letters?paginate=0`)
+  return items.map(fromApi)
+}
+
+export async function listLettersByType(type?: 'pengantar_gelar' | 'pengantar_pensiun'): Promise<StoredLetter[]> {
+  if (!useApi) {
+    // Fallback to local list without type filtering
+    return getLocalLetters()
+  }
+  const qs = type ? `?paginate=0&type=${encodeURIComponent(type)}` : `?paginate=0`
+  const items = await http<any[]>(`/api/letters${qs}`)
+  return items.map(fromApi)
+}
+
+export type LettersQuery = {
+  q?: string
+  type?: string
+  startDate?: string // yyyy-mm-dd
+  endDate?: string   // yyyy-mm-dd
+}
+
+export async function listLettersQuery(params: LettersQuery): Promise<StoredLetter[]> {
+  if (!useApi) return getLocalLetters()
+  const url = new URL(`${API_BASE_URL}/api/letters`)
+  url.searchParams.set('paginate', '0')
+  if (params.q) url.searchParams.set('q', params.q)
+  if (params.type) url.searchParams.set('type', params.type)
+  if (params.startDate) url.searchParams.set('start_date', params.startDate)
+  if (params.endDate) url.searchParams.set('end_date', params.endDate)
+  const items = await http<any[]>(url.pathname + url.search)
   return items.map(fromApi)
 }
 

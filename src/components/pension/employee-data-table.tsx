@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Download, Users, Eye, Trash2, MoreVertical } from "lucide-react"
+import { Search, Download, Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+ 
+import { SuccessDialog } from "@/components/ui/success-dialog"
 
 interface EmployeeDataTableProps {
   onEmployeeSelect: (employee: Employee) => void;
@@ -25,6 +26,8 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
   
   const { toast } = useToast()
   const [syncing, setSyncing] = useState(false)
+  const [successOpen, setSuccessOpen] = useState(false)
+  const [successDesc, setSuccessDesc] = useState<string | null>(null)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [totalEmployees, setTotalEmployees] = useState<number | null>(null)
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -85,7 +88,8 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
       if (resp.ok) {
         const fetched = data?.data?.fetched
         const upserted = data?.data?.upserted
-        toast({ title: 'Sync selesai', description: `Fetched: ${fetched ?? '-'} • Upserted: ${upserted ?? '-'}` })
+        setSuccessDesc(`Fetched: ${fetched ?? '-'} • Upserted: ${upserted ?? '-'}`)
+        setSuccessOpen(true)
         setTimeout(() => { loadSyncStatus(); loadEmployees(); }, 500)
       } else if (resp.status === 401) {
         toast({ title: 'Butuh login', description: 'Silakan login untuk menjalankan sync.', variant: 'destructive' })
@@ -166,8 +170,8 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
               <AppText size="sm" color="muted">
                 Menampilkan {filteredEmployees.length} dari {totalEmployees ?? employees.length} pegawai
               </AppText>
-              <AppText size="xs" color="muted">
-                Terakhir sync: {lastSync ? new Date(lastSync).toLocaleString('id-ID') : 'Belum pernah'}{totalEmployees !== null ? ` • Total: ${totalEmployees}` : ''}
+              <AppText size="xs" color="white">
+                Terakhir sync: {lastSync ? formatDate(lastSync) : 'Belum pernah'}{totalEmployees !== null ? ` • Total: ${totalEmployees}` : ''}
               </AppText>
             </div>
             <div className="flex gap-2">
@@ -189,9 +193,9 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </AppButton>
-              <AppButton variant="hero" size="default" className="text-sm" onClick={handleSync} disabled={syncing}>
+              <AppButton variant="hero" size="default" className="text-sm" onClick={handleSync} loading={syncing}>
                 <Users className="h-4 w-4 mr-2" />
-                {syncing ? 'Syncing...' : 'Sync'}
+                Sync
               </AppButton>
             </div>
           </div>
@@ -210,7 +214,7 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
                 <TableHead className="font-semibold">Golongan</TableHead>
                 <TableHead className="font-semibold">TMT Pensiun</TableHead>
                 <TableHead className="font-semibold">Unit Kerja</TableHead>
-                <TableHead className="text-right font-semibold">Aksi</TableHead>
+                
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -242,33 +246,15 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
                     <TableCell>
                       <AppText size="sm">{formatDate(employee.tmtPensiun)}</AppText>
                     </TableCell>
-                    <TableCell className="max-w-[200px]">
-                      <AppText size="sm" className="truncate">{employee.unitKerja}</AppText>
+                    <TableCell className="max-w-[260px]">
+                      <AppText size="sm" className="whitespace-normal break-words">{employee.unitKerja}</AppText>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <AppButton variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </AppButton>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Lihat Detail
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     <AppText color="muted">Tidak ada data pegawai yang ditemukan</AppText>
                   </TableCell>
                 </TableRow>
@@ -286,6 +272,24 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
           </div>
         </div>
       </Card>
+      {syncing && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center" aria-busy>
+          <div className="flex flex-col items-center gap-3 p-6 rounded-lg bg-card shadow-lg border">
+            <svg className="animate-spin h-8 w-8 text-green-600 dark:text-orange-400" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <AppHeading as="h3" level={5} className="text-green-600 dark:text-orange-400">Sinkronisasi sedang berlangsung</AppHeading>
+            <AppText size="sm" className="text-green-600 dark:text-orange-400">Mohon menunggu 3–7 detik...</AppText>
+          </div>
+        </div>
+      )}
+      <SuccessDialog
+        open={successOpen}
+        onOpenChange={setSuccessOpen}
+        title="Sinkronisasi Berhasil"
+        description={successDesc ?? undefined}
+      />
     </div>
   )
 }

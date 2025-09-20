@@ -21,7 +21,8 @@ class SyncController extends Controller
         $triggeredBy = $user?->id;
 
         // Run synchronously to provide immediate feedback
-        $job = new \App\Jobs\SyncEmployeesJob($triggeredBy ?? 0);
+        // Pass null if no authenticated user to avoid FK violation on activity_logs.user_id
+        $job = new \App\Jobs\SyncEmployeesJob($triggeredBy);
         app()->call([$job, 'handle']);
 
         return response()->json([

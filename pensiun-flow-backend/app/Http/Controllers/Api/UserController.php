@@ -14,7 +14,10 @@ class UserController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()->with('kabupaten');
+        // Optimized eager loading to prevent N+1 queries
+        $query = User::query()->with([
+            'kabupaten:id,nama,kode'
+        ]);
 
         // Exclude superadmin by default from listings (useful for impersonation target)
         if ($request->boolean('exclude_superadmin', true)) {

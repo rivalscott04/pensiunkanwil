@@ -12,6 +12,7 @@ export type Personnel = {
   position?: string;
   unit?: string;
   rank?: string;
+  golongan?: string;
 };
 
 export type RoleType = 'pejabat' | 'pegawai';
@@ -52,6 +53,7 @@ export function usePersonnelSearch(params: { role: RoleType; nip?: string; name?
           position: p.jabatan ?? p.position,
           unit: p.unit_kerja ?? p.unit,
           rank: p.golongan ?? p.rank,
+          golongan: p.golongan ?? p.rank,
         })) as Personnel[];
         setData(items);
       } catch (e: any) {
@@ -127,9 +129,13 @@ export const PersonnelSelector: React.FC<PersonnelSelectorProps> = ({
                             <div className="flex-1">
                               <div className="font-semibold leading-tight">{item.name}</div>
                               <div className="text-xs text-muted-foreground">{(item.nip || '').replace(/\D+/g, '')}</div>
-                              {(item.position || item.unit) && (
+                              {(item.position || item.unit || item.golongan) && (
                                 <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                  {item.position ? `${item.position}` : ''}{item.position && item.unit ? ' — ' : ''}{item.unit ? `${item.unit}` : ''}
+                                  {item.golongan ? `Gol. ${item.golongan}` : ''}
+                                  {item.golongan && item.position ? ' • ' : ''}
+                                  {item.position ? `${item.position}` : ''}
+                                  {item.position && item.unit ? ' — ' : ''}
+                                  {item.unit ? `${item.unit}` : ''}
                                 </div>
                               )}
                             </div>
@@ -147,7 +153,7 @@ export const PersonnelSelector: React.FC<PersonnelSelectorProps> = ({
 
       {value && (
         <div className="text-xs text-muted-foreground">
-          Terpilih: {value.name} — NIP {(value.nip || '').replace(/\D+/g, '')}{value.position ? ` • ${value.position}` : ''}{value.unit ? ` • ${value.unit}` : ''}
+          Terpilih: {value.name} — NIP {(value.nip || '').replace(/\D+/g, '')}{value.golongan ? ` • Gol. ${value.golongan}` : ''}{value.position ? ` • ${value.position}` : ''}{value.unit ? ` • ${value.unit}` : ''}
           <Button variant="ghost" className="ml-2 h-6 px-2" onClick={() => onChange(null)}>
             Hapus
           </Button>

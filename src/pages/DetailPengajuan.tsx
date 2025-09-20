@@ -88,9 +88,21 @@ export default function DetailPengajuan() {
   useEffect(() => {
     const load = async () => {
       if (!id) return
-      const res = await fetch(`${API_BASE_URL || ''}/api/pengajuan/${id}`, { credentials: 'include' })
-      const json = await res.json()
-      const it = json?.data || json
+      try {
+        const res = await fetch(`${API_BASE_URL || ''}/api/pengajuan/${id}`, { 
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        })
+        
+        if (!res.ok) {
+          throw new Error('Failed to load application details')
+        }
+        
+        const json = await res.json()
+        const it = json?.data || json
       const app: Application = {
         id: String(it.id ?? it.nomor_pengajuan ?? id),
         tanggalPengajuan: it.tanggal_pengajuan ?? it.created_at ?? '',
@@ -121,9 +133,18 @@ export default function DetailPengajuan() {
       }
       setApplication(app)
       setDocumentCompliance(Object.fromEntries(app.documents.map(doc => [doc.id, doc.isCompliant])))
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load application details'
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        })
+        navigate('/pengajuan')
+      }
     }
     load()
-  }, [id])
+  }, [id, navigate])
 
   const allDocumentsCompliant = useMemo(() => {
     return (application?.documents || []).every(doc => documentCompliance[doc.id])
