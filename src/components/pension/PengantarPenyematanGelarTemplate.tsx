@@ -99,15 +99,33 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .signature-name { font-weight: bold; margin-bottom: 5px; color: black; }
         .signature-nip { font-size: 10pt; color: black; }
 
-        /* Dynamic spacing for second-to-last row */
+        /* Smart page break logic */
         .data-table { page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
         .data-table tbody tr:last-child { margin-bottom: 15px; }
-        .data-table tbody tr:nth-last-child(2) td { padding-bottom: 25px !important; }
+        
+        /* Force page break before last row if table is too long */
+        .data-table tbody tr:nth-last-child(1) { 
+          page-break-before: auto; 
+        }
+        .data-table tbody tr:nth-last-child(2) { 
+          page-break-after: avoid;
+          margin-bottom: 0;
+        }
+        
         @media print { 
           .data-table thead { display: table-row-group !important; }
           .data-table tbody tr:last-child { margin-bottom: 15px !important; }
-          .data-table tbody tr:nth-last-child(2) td { padding-bottom: 25px !important; }
+          .data-table tbody tr:nth-last-child(2) { 
+            page-break-after: avoid !important;
+            margin-bottom: 0 !important;
+          }
+          /* Smart break: if row is too close to bottom, break before it */
+          .data-table tbody tr { 
+            page-break-inside: avoid !important;
+            orphans: 3 !important;
+            widows: 3 !important;
+          }
         }
       `}</style>
 
