@@ -103,7 +103,7 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
             <div className="document-info">
               <div className="info-row"><div className="info-label">Nomor</div><div className="info-colon">:</div><div className="info-value">{nomorSurat}</div></div>
               <div className="info-row"><div className="info-label">Lamp.</div><div className="info-colon">:</div><div className="info-value">{lampiran}</div></div>
-              <div className="info-row"><div className="info-label">Perihal</div><div className="info-colon">:</div><div className="info-value">Usul Permohonan Pensiun sebagai PNS<br />An. Dra. Hikmah /196512311999032002 dkk</div></div>
+              <div className="info-row"><div className="info-label">Perihal</div><div className="info-colon">:</div><div className="info-value">Usul Permohonan Pensiun sebagai PNS<br />An. {rows.length > 0 ? `${rows[0].nama} / ${formatNip(rows[0].nip)}${rows.length > 1 ? ' dkk' : ''}` : ''}</div></div>
             </div>
             <div className="document-date">{tanggalSuratText}</div>
           </div>
