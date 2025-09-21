@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Eye, EyeOff, User, Lock } from "lucide-react"
+import { Eye, EyeOff, User, Lock, AlertCircle, X } from "lucide-react"
 import { AppButton } from "@/components/ui/app-button"
 import { AppHeading, AppText } from "@/components/ui/app-typography"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -8,35 +8,71 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoginIllustration } from "@/components/illustrations/LoginIllustration"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [errorOpen, setErrorOpen] = useState(false)
+  const [serverError, setServerError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    password: ""
+  })
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   })
+  const [emailTouched, setEmailTouched] = useState(false)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    // basic input validation
-    const email = formData.username.trim()
-    const password = formData.password
-    if (!email || !password) {
-      setError("Email dan password wajib diisi. Silakan cek kembali.")
-      setErrorOpen(true)
-      return
+  // Real-time email validation
+  const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      return "Email wajib diisi"
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      setError("Format email tidak valid. Silakan periksa alamat email Anda.")
-      setErrorOpen(true)
+      return "Format email tidak valid"
+    }
+    return ""
+  }
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return "Password wajib diisi"
+    }
+    return ""
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setServerError("")
+    
+    // Clear previous field errors
+    setFieldErrors({ email: "", password: "" })
+    
+    const email = formData.username.trim()
+    const password = formData.password
+    
+    // Validate fields
+    const emailError = validateEmail(email)
+    const passwordError = validatePassword(password)
+    
+    if (emailError || passwordError) {
+      setFieldErrors({
+        email: emailError,
+        password: passwordError
+      })
+      
+      // Focus on first error field
+      if (emailError) {
+        emailRef.current?.focus()
+      } else if (passwordError) {
+        passwordRef.current?.focus()
+      }
       return
     }
+    
     setLoading(true)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/login`, {
@@ -48,12 +84,11 @@ export default function Login() {
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (res.status === 401 || res.status === 422) {
-          setError('Email dan password tidak sesuai. Silakan cek kembali.')
-          setErrorOpen(true)
+          setServerError('Email dan password tidak sesuai. Silakan cek kembali.')
+          passwordRef.current?.focus()
           return
         }
-        setError('Terjadi kendala saat masuk. Silakan coba lagi beberapa saat.')
-        setErrorOpen(true)
+        setServerError('Terjadi kendala saat masuk. Silakan coba lagi beberapa saat.')
         return
       }
       // store token (for Authorization header fallback)
@@ -61,18 +96,54 @@ export default function Login() {
       // redirect
       window.location.href = '/dashboard'
     } catch (err) {
-      setError('Terjadi kendala jaringan. Silakan coba lagi.')
-      setErrorOpen(true)
+      setServerError('Terjadi kendala jaringan. Silakan coba lagi.')
     } finally {
       setLoading(false)
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }))
+    }
+    
+    // Clear server error when user starts typing
+    if (serverError) {
+      setServerError("")
+    }
+    
+    // Real-time email validation
+    if (name === "username") {
+      setEmailTouched(true)
+      if (emailTouched) {
+        const emailError = validateEmail(value)
+        if (emailError) {
+          setFieldErrors(prev => ({
+            ...prev,
+            email: emailError
+          }))
+        }
+      }
+    }
+  }
+
+  const handleEmailBlur = () => {
+    setEmailTouched(true)
+    const emailError = validateEmail(formData.username)
+    setFieldErrors(prev => ({
+      ...prev,
+      email: emailError
+    }))
   }
 
   return (
@@ -144,48 +215,86 @@ export default function Login() {
 
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="username">Email</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    name="username"
-                    type="email"
-                    required
-                    placeholder="Masukkan email"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+                {/* Server Error Banner */}
+                {serverError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-4 w-4 text-red-600" />
+                      <span className="text-sm text-red-800">{serverError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setServerError("")}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
 
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Masukkan password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="pl-10 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="username">Email</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={emailRef}
+                        id="username"
+                        name="username"
+                        type="email"
+                        required
+                        placeholder="Masukkan email"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        onBlur={handleEmailBlur}
+                        className={`pl-10 ${fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      />
+                      {fieldErrors.email && (
+                        <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    {fieldErrors.email && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>{fieldErrors.email}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={passwordRef}
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="Masukkan password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className={`pl-10 pr-10 ${fieldErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-10 top-3 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                      {fieldErrors.password && (
+                        <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    {fieldErrors.password && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>{fieldErrors.password}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -215,16 +324,6 @@ export default function Login() {
                 </AppButton>
 
               </form>
-              {/* Error Dialog - modern style consistent with ConfirmDialog */}
-              <ConfirmDialog
-                open={errorOpen}
-                onOpenChange={setErrorOpen}
-                title="Tidak dapat masuk"
-                description={error || 'Email dan password tidak sesuai. Silakan cek kembali.'}
-                confirmText="Mengerti"
-                cancelText="Tutup"
-                onConfirm={() => setErrorOpen(false)}
-              />
 
               <div className="mt-6 text-center">
                 <AppText size="xs" color="muted">
