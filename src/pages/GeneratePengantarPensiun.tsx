@@ -22,6 +22,10 @@ export default function GeneratePengantarPensiun() {
   const [signatureMode, setSignatureMode] = React.useState<"manual" | "tte">("manual");
   const [signatureAnchor, setSignatureAnchor] = React.useState<"^" | "$" | "#">("^");
 
+  // Addressee fields
+  const [addresseeJabatan, setAddresseeJabatan] = React.useState("Sekretaris Jenderal Kementerian Agama RI");
+  const [addresseeKota, setAddresseeKota] = React.useState("Jakarta");
+
   const addPegawai = (p: Personnel | null) => {
     if (!p) return;
     setPegawaiList((prev) => {
@@ -70,6 +74,10 @@ export default function GeneratePengantarPensiun() {
     if (!tempat) return tgl;
     return `${tempat}, ${tgl}`;
   }, [renderTanggalSurat, tempat]);
+
+  const addresseeText = React.useMemo(() => {
+    return `${addresseeJabatan}<br />${addresseeKota}`;
+  }, [addresseeJabatan, addresseeKota]);
 
   const rows: PengantarPensiunRow[] = React.useMemo(() => {
     return pegawaiList.map((p, idx) => {
@@ -127,7 +135,7 @@ export default function GeneratePengantarPensiun() {
     try {
       const payload: any = {
         id: "",
-        nomorSurat: nomorSurat,
+        nomorSurat: finalNomorSurat,
         tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
         namaPegawai: pegawaiList[0]?.name || "",
         nipPegawai: pegawaiList[0]?.nip || "",
@@ -142,6 +150,8 @@ export default function GeneratePengantarPensiun() {
         signatureAnchor: "^",
         type: "pengantar_pensiun",
         perihal: "Usul Pensiun BUP, J/D /KPP",
+        addresseeJabatan: addresseeJabatan,
+        addresseeKota: addresseeKota,
       }
       await saveLetterService(payload)
     } catch {}
@@ -203,6 +213,58 @@ export default function GeneratePengantarPensiun() {
                     </Select>
                   </div>
                 )}
+              </div>
+
+              {/* Addressee Section with Best Practice UI/UX */}
+              <div className="border-t pt-4">
+                <div className="mb-3">
+                  <h3 className="text-sm font-medium text-foreground">Penerima Surat</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Format: Kepada Yth.<br />[Jabatan/Instansi]<br />[Kota/Tempat]
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="addressee-jabatan">
+                      Jabatan / Instansi <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="addressee-jabatan"
+                      value={addresseeJabatan}
+                      onChange={(e) => setAddresseeJabatan(e.target.value)}
+                      placeholder="Contoh: Sekretaris Jenderal Kementerian Agama RI"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Masukkan jabatan atau instansi penerima surat
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="addressee-kota">
+                      Kota / Tempat <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="addressee-kota"
+                      value={addresseeKota}
+                      onChange={(e) => setAddresseeKota(e.target.value)}
+                      placeholder="Contoh: Jakarta"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Masukkan kota atau tempat penerima surat
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Preview Addressee */}
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Preview Penerima Surat:</p>
+                  <div className="text-sm">
+                    <strong>Kepada Yth.</strong><br />
+                    {addresseeJabatan || "[Jabatan/Instansi]"}<br />
+                    {addresseeKota || "[Kota/Tempat]"}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -292,6 +354,7 @@ export default function GeneratePengantarPensiun() {
                       nomorSurat={finalNomorSurat}
                       lampiran={lampiran}
                       tanggalSuratText={renderTanggalSurat}
+                      addresseeText={addresseeText}
                       tempatTanggalText={tempatTanggalText}
                       rows={rows}
                       signatureMode={signatureMode}

@@ -27,6 +27,10 @@ export default function GeneratePengantarGelar() {
   const [signatureMode, setSignatureMode] = React.useState<"manual" | "tte">("manual");
   const [signatureAnchor, setSignatureAnchor] = React.useState<"^" | "$" | "#">("^");
 
+  // Addressee fields
+  const [addresseeJabatan, setAddresseeJabatan] = React.useState("Biro SDM Kementerian Agama RI");
+  const [addresseeKota, setAddresseeKota] = React.useState("Jakarta");
+
   // Row extra fields managed locally per selected pegawai
   const [rowExtras, setRowExtras] = React.useState<Record<string, { jabatan?: string; pendidikanLama: string; pendidikanTerakhir: string }>>({});
 
@@ -74,6 +78,10 @@ export default function GeneratePengantarGelar() {
     if (!tempat) return tgl;
     return `${tempat}, ${tgl}`;
   }, [renderTanggalSurat, tempat]);
+
+  const addresseeText = React.useMemo(() => {
+    return `${addresseeJabatan}<br />${addresseeKota}`;
+  }, [addresseeJabatan, addresseeKota]);
 
   const finalNomorSurat = React.useMemo(() => {
     const parts = (tanggalSuratInput || "").split("-");
@@ -150,6 +158,8 @@ export default function GeneratePengantarGelar() {
         signatureAnchor: "^",
         type: "pengantar_gelar",
         perihal: "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS",
+        addresseeJabatan: addresseeJabatan,
+        addresseeKota: addresseeKota,
       }
       await saveLetterService(payload)
     } catch {}
@@ -211,6 +221,57 @@ export default function GeneratePengantarGelar() {
                     </Select>
                   </div>
                 )}
+              </div>
+
+              {/* Addressee Section with Best Practice UI/UX */}
+              <div className="border-t pt-4">
+                <div className="mb-3">
+                  <h3 className="text-sm font-medium text-foreground">Penerima Surat</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Format: Yth. [Jabatan/Instansi]<br />[Kota/Tempat]
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="addressee-jabatan">
+                      Jabatan / Instansi <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="addressee-jabatan"
+                      value={addresseeJabatan}
+                      onChange={(e) => setAddresseeJabatan(e.target.value)}
+                      placeholder="Contoh: Biro SDM Kementerian Agama RI"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Masukkan jabatan atau instansi penerima surat
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="addressee-kota">
+                      Kota / Tempat <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="addressee-kota"
+                      value={addresseeKota}
+                      onChange={(e) => setAddresseeKota(e.target.value)}
+                      placeholder="Contoh: Jakarta"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Masukkan kota atau tempat penerima surat
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Preview Addressee */}
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg border">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Preview Penerima Surat:</p>
+                  <div className="text-sm">
+                    <strong>Yth. {addresseeJabatan || "[Jabatan/Instansi]"}</strong><br />
+                    {addresseeKota || "[Kota/Tempat]"}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,6 +364,7 @@ export default function GeneratePengantarGelar() {
                       nomorSurat={finalNomorSurat}
                       lampiran={lampiran}
                       tanggalSuratText={renderTanggalSurat}
+                      addresseeText={addresseeText}
                       penandatanganJabatan={pejabat?.position || ""}
                       penandatanganNama={pejabat?.name || ""}
                       penandatanganNip={pejabat?.nip || ""}

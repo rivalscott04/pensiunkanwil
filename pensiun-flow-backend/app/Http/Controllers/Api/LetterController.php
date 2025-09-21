@@ -90,6 +90,8 @@ class LetterController extends Controller
             'template_version' => [ 'required', 'string' ],
             'type' => [ 'nullable', 'string' ],
             'perihal' => [ 'nullable', 'string' ],
+            'addressee_jabatan' => [ 'nullable', 'string' ],
+            'addressee_kota' => [ 'nullable', 'string' ],
         ]);
     }
 }

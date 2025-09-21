@@ -14,6 +14,7 @@ export type PengantarPenyematanGelarProps = {
   nomorSurat?: string;
   lampiran?: string;
   tanggalSuratText?: string; // e.g. "5 September 2025"
+  addresseeText?: string; // e.g. "Sekretaris Jenderal Kementerian Agama RI<br />Cq. Kepala Biro Kepegawaian<br />Jakarta"
   penandatanganJabatan?: string;
   penandatanganNama?: string;
   penandatanganNip?: string;
@@ -29,6 +30,7 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
     nomorSurat = "",
     lampiran = "-",
     tanggalSuratText = "",
+    addresseeText = "Sekretaris Jenderal Kementerian Agama RI<br />Cq. Kepala Biro Kepegawaian<br />Jakarta",
     penandatanganJabatan = "",
     penandatanganNama = "",
     penandatanganNip = "",
@@ -67,6 +69,9 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .sheet { padding: 1.5cm 2cm; page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }
         .header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid black; overflow: hidden; }
+        @media print { 
+          .sheet:first-child { padding-top: 1cm !important; }
+        }
         .logo { float: left; width: 100px; height: 100px; margin-right: 15px; object-fit: contain; }
         .header-text { font-size: 13pt; font-weight: bold; line-height: 1.2; text-align: center; }
         .header-info { font-size: 11pt; line-height: 1.1; text-align: center; margin-top: 5px; }
@@ -159,9 +164,7 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
 
           <div className="addressee">
             <p>
-              Yth. Sekretaris Jenderal Kementerian Agama RI<br />
-              Cq. Kepala Biro Kepegawaian<br />
-              Jakarta
+              Yth. <span dangerouslySetInnerHTML={{ __html: addresseeText }} />
             </p>
           </div>
 

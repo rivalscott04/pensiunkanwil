@@ -109,11 +109,11 @@ export default function Dashboard() {
             <AppButton 
               variant="hero"
               size="lg"
-              onClick={() => navigate('/pengajuan')}
+              onClick={() => navigate('/pegawai')}
               className="hover:scale-105 transition-all duration-200"
             >
               <FileText className="h-5 w-5 mr-2" />
-              Ajukan Pensiun
+              Kelola Pegawai Pensiun
             </AppButton>
           </motion.div>
         </motion.div>

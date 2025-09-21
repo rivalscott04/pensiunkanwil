@@ -14,6 +14,7 @@ export type PengantarPensiunProps = {
   nomorSurat?: string;
   lampiran?: string;
   tanggalSuratText?: string;
+  addresseeText?: string; // e.g. "Sekretaris Jenderal Kementerian Agama RI<br />Jakarta"
   tempatTanggalText?: string;
   rows: PengantarPensiunRow[];
   signatureMode?: "manual" | "tte";
@@ -28,6 +29,7 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
     nomorSurat = "",
     lampiran = "-",
     tanggalSuratText = "",
+    addresseeText = "Sekretaris Jenderal Kementerian Agama RI<br />Up. Kepala Biro SDM<br />Jakarta",
     tempatTanggalText = "",
     rows = [],
     signatureMode = "manual",
@@ -111,9 +113,7 @@ export const PengantarPensiunTemplate: React.FC<PengantarPensiunProps> = (props)
           <div className="addressee">
             <p>
               Kepada Yth.<br />
-              Sekretaris Jenderal Kementerian Agama RI<br />
-              Up. Kepala Biro SDM<br />
-              Jakarta
+              <span dangerouslySetInnerHTML={{ __html: addresseeText }} />
             </p>
           </div>
 

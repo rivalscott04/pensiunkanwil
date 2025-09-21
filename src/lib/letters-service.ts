@@ -41,6 +41,10 @@ function fromApi(api: any): StoredLetter {
     type: api.type,
     // @ts-ignore extend
     perihal: api.perihal,
+    // @ts-ignore extend
+    addresseeJabatan: api.addressee_jabatan,
+    // @ts-ignore extend
+    addresseeKota: api.addressee_kota,
   }
 }
 
@@ -64,6 +68,8 @@ function toApi(ui: StoredLetter): any {
     // extra meta when provided via type assertion
     type: (ui as any).type ?? null,
     perihal: (ui as any).perihal ?? null,
+    addressee_jabatan: (ui as any).addresseeJabatan ?? null,
+    addressee_kota: (ui as any).addresseeKota ?? null,
   }
 }
 

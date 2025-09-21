@@ -27,6 +27,8 @@ class Letter extends Model
         'template_version',
         'type',
         'perihal',
+        'addressee_jabatan',
+        'addressee_kota',
     ];
 
     protected $casts = [
