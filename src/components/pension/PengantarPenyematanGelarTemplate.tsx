@@ -54,7 +54,16 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
     <div className="w-full bg-white text-black">
       <style>{`
         @page { size: auto; margin: 0; }
-        @media print { body { -webkit-print-color-adjust: exact; } }
+        @page :first { margin-top: 0; }
+        @page :left { margin-top: 2.5cm; }
+        @page :right { margin-top: 2.5cm; }
+        html, body { margin: 0; padding: 0; }
+        @media print { 
+          body { -webkit-print-color-adjust: exact; margin: 0 !important; } 
+          .sheet { padding: 1.5cm 2cm; page-break-after: always; }
+          .sheet:first-child { padding-top: 1.5cm; }
+          .sheet:not(:first-child) { padding-top: 2.5cm; }
+        }
         .sheet { padding: 1.5cm 2cm; page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }
         .header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid black; overflow: hidden; }
@@ -90,13 +99,15 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .signature-name { font-weight: bold; margin-bottom: 5px; color: black; }
         .signature-nip { font-size: 10pt; color: black; }
 
-        /* Simple spacing for last data */
+        /* Dynamic spacing for second-to-last row */
         .data-table { page-break-inside: auto; }
         .data-table tr { page-break-inside: avoid; page-break-after: auto; }
         .data-table tbody tr:last-child { margin-bottom: 15px; }
+        .data-table tbody tr:nth-last-child(2) td { padding-bottom: 25px !important; }
         @media print { 
           .data-table thead { display: table-row-group !important; }
           .data-table tbody tr:last-child { margin-bottom: 15px !important; }
+          .data-table tbody tr:nth-last-child(2) td { padding-bottom: 25px !important; }
         }
       `}</style>
 
