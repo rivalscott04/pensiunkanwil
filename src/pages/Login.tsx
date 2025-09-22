@@ -88,6 +88,10 @@ export default function Login() {
           passwordRef.current?.focus()
           return
         }
+        if (res.status === 419) {
+          setServerError('Session expired. Silakan refresh halaman dan coba lagi.')
+          return
+        }
         setServerError('Terjadi kendala saat masuk. Silakan coba lagi beberapa saat.')
         return
       }
