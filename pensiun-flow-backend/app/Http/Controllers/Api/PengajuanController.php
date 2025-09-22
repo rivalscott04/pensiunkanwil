@@ -111,7 +111,6 @@ class PengajuanController extends Controller
             'tanggal_mulai_kerja' => 'nullable|date',
             'masa_kerja_tahun' => 'nullable|integer|min:0',
             'masa_kerja_bulan' => 'nullable|integer|min:0|max:11',
-            'gaji_pokok' => 'nullable|numeric|min:0',
             'jenis_pensiun' => 'required|in:normal,dipercepat,khusus',
             'tanggal_pensiun' => 'nullable|date',
             'catatan' => 'nullable|string'
@@ -129,10 +128,17 @@ class PengajuanController extends Controller
 
         DB::beginTransaction();
         try {
+            // For superadmin without kabupaten_id, use the first kabupaten as default
+            $kabupatenId = $user->kabupaten_id;
+            if (!$kabupatenId && $user->isSuperAdmin()) {
+                $firstKabupaten = \App\Models\Kabupaten::first();
+                $kabupatenId = $firstKabupaten ? $firstKabupaten->id : 1;
+            }
+            
             $pengajuan = Pengajuan::create([
                 'nomor_pengajuan' => Pengajuan::generateNomorPengajuan(),
                 'user_id' => $user->id,
-                'kabupaten_id' => $user->kabupaten_id,
+                'kabupaten_id' => $kabupatenId,
                 'nip_pegawai' => $request->nip_pegawai,
                 'nama_pegawai' => $request->nama_pegawai,
                 'jabatan' => $request->jabatan,
@@ -142,7 +148,6 @@ class PengajuanController extends Controller
                 'tanggal_mulai_kerja' => $request->tanggal_mulai_kerja,
                 'masa_kerja_tahun' => $request->masa_kerja_tahun,
                 'masa_kerja_bulan' => $request->masa_kerja_bulan,
-                'gaji_pokok' => $request->gaji_pokok,
                 'jenis_pensiun' => $request->jenis_pensiun,
                 'tanggal_pensiun' => $request->tanggal_pensiun,
                 'catatan' => $request->catatan,
@@ -209,7 +214,6 @@ class PengajuanController extends Controller
             'tanggal_mulai_kerja' => 'nullable|date',
             'masa_kerja_tahun' => 'nullable|integer|min:0',
             'masa_kerja_bulan' => 'nullable|integer|min:0|max:11',
-            'gaji_pokok' => 'nullable|numeric|min:0',
             'jenis_pensiun' => 'required|in:normal,dipercepat,khusus',
             'tanggal_pensiun' => 'nullable|date',
             'catatan' => 'nullable|string'

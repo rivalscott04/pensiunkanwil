@@ -11,7 +11,6 @@ export interface Employee {
   tanggalMulaiKerja?: string;
   masaKerjaTahun?: number;
   masaKerjaBulan?: number;
-  gajiPokok?: number;
 }
 
 // Mock data removed - now using real API data

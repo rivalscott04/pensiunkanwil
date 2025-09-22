@@ -55,7 +55,6 @@ export default function DocumentUpload() {
           tanggal_mulai_kerja: employee.tanggalMulaiKerja,
           masa_kerja_tahun: employee.masaKerjaTahun,
           masa_kerja_bulan: employee.masaKerjaBulan,
-          gaji_pokok: employee.gajiPokok,
           jenis_pensiun: mapPensionTypeToBackend(pensionType),
           tanggal_pensiun: employee.tmtPensiun,
           catatan: `Pengajuan pensiun ${pensionType.toUpperCase()} untuk ${employee.nama}`

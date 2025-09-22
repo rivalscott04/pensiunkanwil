@@ -60,7 +60,6 @@ interface Application {
   unitKerja: string
   jabatan: string
   masaKerja: string
-  gajiPokok: string
   documents: Document[]
   statusHistory: Array<{
     status: string
@@ -119,7 +118,6 @@ export default function DetailPengajuan() {
         unitKerja: it.unit_kerja ?? '',
         jabatan: it.jabatan ?? '',
         masaKerja: it.masa_kerja ?? '',
-        gajiPokok: it.gaji_pokok ? String(it.gaji_pokok) : '',
         documents: Array.isArray(it.files) ? it.files.map((f: any) => ({
           id: String(f.id),
           name: f.nama_asli ?? f.nama_file ?? 'Dokumen',
@@ -412,10 +410,6 @@ export default function DetailPengajuan() {
                     <div>
                       <Label className="text-sm font-medium">Masa Kerja</Label>
                       <AppText>{application.masaKerja}</AppText>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Gaji Pokok</Label>
-                      <AppText>{application.gajiPokok}</AppText>
                     </div>
                   </div>
                 </CardContent>
