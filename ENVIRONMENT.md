@@ -30,7 +30,7 @@ npm run dev:local
 
 ### Production Build
 ```bash
-npm run build
+npm run build:production
 ```
 
 ### Network Build
@@ -41,6 +41,11 @@ npm run build:network
 ### Local Build
 ```bash
 npm run build:local
+```
+
+### Auto Build (Recommended)
+```bash
+npm run build
 ```
 
 ## 🔧 Environment Variables
@@ -56,6 +61,16 @@ VITE_API_BASE_URL=http://192.168.1.100:8000 npm run dev
 
 # Atau gunakan script yang sudah disediakan
 npm run dev:network
+```
+
+### Production Environment
+Untuk production di `supensi.rivaldev.site`:
+```bash
+# Build untuk production
+npm run build:production
+
+# Atau set manual
+VITE_API_BASE_URL=https://supensi.rivaldev.site/api npm run build
 ```
 
 ## 🌐 Network Configuration

@@ -22,6 +22,11 @@ export const getApiBaseUrl = (): string => {
 
   const hostname = getCurrentHost();
   
+  // Production domain - use HTTPS API
+  if (hostname === 'supensi.rivaldev.site') {
+    return 'https://supensi.rivaldev.site/api';
+  }
+  
   // If running on localhost or 127.0.0.1, use local backend
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:8000';

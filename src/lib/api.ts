@@ -1,5 +1,8 @@
 import { API_BASE_URL } from './config';
 
+// Re-export API_BASE_URL for backward compatibility
+export { API_BASE_URL };
+
 export const getAuthToken = (): string | null => {
   try {
     return localStorage.getItem('auth_token');
