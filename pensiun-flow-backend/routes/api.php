@@ -32,17 +32,7 @@ Route::get('/employees', function () {
     if ($perPage <= 0) { $perPage = 10; }
     if ($perPage > 10000) { $perPage = 10000; }
 
-    $q = trim((string) request()->query('q', ''));
-
-    $query = \App\Models\Employee::query()
-        ->when($q !== '', function ($qq) use ($q) {
-            $qq->where(function ($w) use ($q) {
-                $w->where('nip', 'like', "%{$q}%")
-                  ->orWhere('nama', 'like', "%{$q}%")
-                  ->orWhere('unit_kerja', 'like', "%{$q}%");
-            });
-        })
-        ->orderBy('nama');
+    $query = \App\Models\Employee::query()->orderBy('nama');
 
     // If requesting all data (per_page >= 10000), return all without pagination
     if ($perPage >= 10000) {
