@@ -21,6 +21,7 @@ interface EmployeeDataTableProps {
 
 export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: EmployeeDataTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [selectedGolongan, setSelectedGolongan] = useState("Semua Golongan")
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("Semua Unit Kerja")
   
@@ -33,7 +34,6 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
   const [employees, setEmployees] = useState<Employee[]>([])
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(10)
-  const [totalPages, setTotalPages] = useState<number>(1)
   const perPageOptions = [10, 20, 50, 100]
 
   const loadSyncStatus = async () => {
@@ -49,11 +49,26 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
   React.useEffect(() => {
     loadSyncStatus()
     loadEmployees()
-  }, [page, perPage])
+  }, [])
+
+  // Debounce search query
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setPage(1)
+  }, [debouncedSearchQuery, selectedGolongan, selectedUnitKerja])
 
   const loadEmployees = async () => {
     try {
-      const resp = await fetch(`${API_BASE_URL || ''}/api/employees?page=${page}&per_page=${perPage}`, { credentials: 'include' })
+      // Load all employees at once for local filtering
+      const resp = await fetch(`${API_BASE_URL || ''}/api/employees?per_page=1000`, { credentials: 'include' })
       if (!resp.ok) return
       const json = await resp.json()
       const items = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []
@@ -67,12 +82,7 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
         status: 'eligible',
       }))
       setEmployees(mapped)
-      if (typeof json?.meta?.total === 'number') setTotalEmployees(json.meta.total)
-      else if (typeof json?.total === 'number') setTotalEmployees(json.total)
-      else setTotalEmployees(mapped.length)
-      if (json?.meta?.last_page) setTotalPages(json.meta.last_page)
-      else if (typeof json?.last_page === 'number') setTotalPages(json.last_page)
-      else setTotalPages(1)
+      setTotalEmployees(mapped.length)
     } catch {}
   }
 
@@ -103,17 +113,24 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
     }
   }
 
-  // Filter employees based on search and filters
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         employee.nip.includes(searchQuery) ||
-                         employee.unitKerja.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter employees based on search, golongan and unit kerja (local filtering)
+  const allFilteredEmployees = employees.filter(employee => {
+    const matchesSearch = debouncedSearchQuery === '' || 
+      employee.nama.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      employee.nip.includes(debouncedSearchQuery) ||
+      employee.unitKerja.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
     
     const matchesGolongan = selectedGolongan === "Semua Golongan" || employee.golongan === selectedGolongan
     const matchesUnitKerja = selectedUnitKerja === "Semua Unit Kerja" || employee.unitKerja === selectedUnitKerja
     
     return matchesSearch && matchesGolongan && matchesUnitKerja
   })
+
+  // Client-side pagination
+  const startIndex = (page - 1) * perPage
+  const endIndex = startIndex + perPage
+  const filteredEmployees = allFilteredEmployees.slice(startIndex, endIndex)
+  const totalPages = Math.ceil(allFilteredEmployees.length / perPage)
 
 
   const formatDate = (dateString: string) => {
@@ -168,7 +185,7 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="space-y-1">
               <AppText size="sm" color="muted">
-                Menampilkan {filteredEmployees.length} dari {totalEmployees ?? employees.length} pegawai
+                Menampilkan {filteredEmployees.length} dari {allFilteredEmployees.length} pegawai
               </AppText>
               <AppText size="xs" color="white">
                 Terakhir sync: {lastSync ? formatDate(lastSync) : 'Belum pernah'}{totalEmployees !== null ? ` • Total: ${totalEmployees}` : ''}
