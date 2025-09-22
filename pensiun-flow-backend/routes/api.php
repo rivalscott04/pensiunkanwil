@@ -42,7 +42,6 @@ Route::get('/employees', function () {
                   ->orWhere('unit_kerja', 'like', "%{$q}%");
             });
         })
-        ->whereYear('tmt_pensiun', date('Y'))
         ->orderBy('nama');
 
     return $query->paginate($perPage);
