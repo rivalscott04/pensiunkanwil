@@ -103,7 +103,7 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
         setSuccessOpen(true)
         setTimeout(() => { loadSyncStatus(); loadEmployees(); }, 500)
       } else if (resp.status === 401) {
-        toast({ title: 'Butuh login', description: 'Silakan login untuk menjalankan sync.', variant: 'destructive' })
+        // Suppress toast; global session-expired modal will handle UX
       } else {
         toast({ title: 'Gagal memulai sync', description: data?.message ?? 'Terjadi kesalahan', variant: 'destructive' })
       }

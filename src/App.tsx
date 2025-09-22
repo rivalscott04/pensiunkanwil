@@ -76,7 +76,11 @@ function SessionExpiredListener() {
   const [open, setOpen] = React.useState(false)
 
   React.useEffect(() => {
-    const handler = () => setOpen(true)
+    const handler = () => {
+      // Do not show the modal if already on login page
+      if (window.location.pathname === '/login') return
+      setOpen(true)
+    }
     window.addEventListener('session-expired', handler as EventListener)
     return () => window.removeEventListener('session-expired', handler as EventListener)
   }, [])
@@ -85,6 +89,15 @@ function SessionExpiredListener() {
     try { localStorage.removeItem('auth_token') } catch {}
     // Optional: clear any other client caches if needed
     window.location.href = '/login'
+  }, [])
+
+  // If navigated to login while modal open, close it
+  React.useEffect(() => {
+    const onPopState = () => {
+      if (window.location.pathname === '/login') setOpen(false)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
   return <SessionExpiredModal open={open} onConfirm={handleConfirm} />
