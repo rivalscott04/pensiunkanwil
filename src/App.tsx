@@ -21,6 +21,7 @@ import GenerateSPTJM from "./pages/GenerateSPTJM";
 import GeneratePengantarPensiun from "./pages/GeneratePengantarPensiun";
 import NotFound from "./pages/NotFound";
 import UsersPage from "./pages/Users";
+import SessionExpiredModal from "@/components/ui/session-expired-modal";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
+          <SessionExpiredListener />
           <BrowserRouter
             future={{
               v7_startTransition: true,
@@ -68,3 +70,22 @@ const App = () => (
 );
 
 export default App;
+
+// Local component to listen for global session-expired events and render the modal
+function SessionExpiredListener() {
+  const [open, setOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    const handler = () => setOpen(true)
+    window.addEventListener('session-expired', handler as EventListener)
+    return () => window.removeEventListener('session-expired', handler as EventListener)
+  }, [])
+
+  const handleConfirm = React.useCallback(() => {
+    try { localStorage.removeItem('auth_token') } catch {}
+    // Optional: clear any other client caches if needed
+    window.location.href = '/login'
+  }, [])
+
+  return <SessionExpiredModal open={open} onConfirm={handleConfirm} />
+}

@@ -24,7 +24,15 @@ export async function fetchJson(input: RequestInfo | URL, init: RequestInit = {}
     headers: { ...(init.headers || {}), ...getAuthHeaders() },
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(json?.message || 'Request failed'), { status: res.status, json });
+  if (!res.ok) {
+    // Broadcast unauthenticated event for global handling
+    if (res.status === 401 || res.status === 419) {
+      try {
+        window.dispatchEvent(new CustomEvent('session-expired'))
+      } catch {}
+    }
+    throw Object.assign(new Error(json?.message || 'Request failed'), { status: res.status, json });
+  }
   return json;
 }
 
