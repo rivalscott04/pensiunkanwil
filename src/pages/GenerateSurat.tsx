@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getLetter, StoredLetter, saveLetter as saveLocalLetter } from "@/lib/letters";
+import { getLetter, StoredLetter } from "@/lib/letters";
 import { saveLetterService } from "@/lib/letters-service";
 import { Separator } from "@/components/ui/separator";
 import { KemenagDocumentTemplate, KemenagTemplateProps } from "@/components/pension/KemenagDocumentTemplate";
@@ -229,15 +229,11 @@ export default function CreateSurat() {
     const payload = { ...(letter as any), type: 'hukuman_disiplin' } as any;
     try {
       setSaving(true)
-      // Save to backend if configured, otherwise local storage
-      const saved = await saveLetterService(editId ? (payload as any) : { ...(payload as any), id: "" as unknown as string })
-      if (!saved) {
-        saveLocalLetter(payload as any)
-      }
+      // Save directly to database
+      await saveLetterService(editId ? (payload as any) : { ...(payload as any), id: "" as unknown as string })
       setPrintModalOpen(true)
     } catch (e) {
-      // Fallback to local save so user does not lose work
-      try { saveLocalLetter(payload as any) } catch {}
+      console.error('Failed to save letter:', e)
       setErrorModalOpen(true)
     } finally {
       setSaving(false)
@@ -269,6 +265,7 @@ export default function CreateSurat() {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     value={documentSequence}
+                    required
                     onChange={(e) => {
                       const raw = e.target.value;
                       const digits = keepDigits(raw);
@@ -294,6 +291,7 @@ export default function CreateSurat() {
                     pattern="[0-9]*"
                     maxLength={2}
                     value={documentMonth}
+                    required
                     onChange={(e) => {
                       const raw = e.target.value;
                       const digits = keepDigits(raw).slice(0, 2);
@@ -318,6 +316,7 @@ export default function CreateSurat() {
                     pattern="[0-9]*"
                     maxLength={4}
                     value={documentYear}
+                    required
                     onChange={(e) => {
                       const raw = e.target.value;
                       const digits = keepDigits(raw).slice(0, 4);
@@ -404,6 +403,7 @@ export default function CreateSurat() {
                     value={signaturePlace}
                     onChange={(e) => { const v = e.target.value; setSignaturePlace(v); setErrors((s) => ({ ...s, signaturePlace: validateSignaturePlace(v) })); }}
                     placeholder="Mataram"
+                    required
                     aria-invalid={!!errors.signaturePlace}
                     aria-describedby={errors.signaturePlace ? "err-signaturePlace" : undefined}
                     className={errors.signaturePlace ? "border-destructive focus-visible:ring-destructive" : undefined}
@@ -416,6 +416,7 @@ export default function CreateSurat() {
                     id="field-signatureDateInput"
                     type="date"
                     value={signatureDateInput}
+                    required
                     onChange={(e) => { const v = e.target.value; setSignatureDateInput(v); setErrors((s) => ({ ...s, signatureDateInput: validateSignatureDate(v) })); }}
                     aria-invalid={!!errors.signatureDateInput}
                     aria-describedby={errors.signatureDateInput ? "err-signatureDateInput" : undefined}
@@ -445,20 +446,26 @@ export default function CreateSurat() {
 
       <Dialog open={printModalOpen} onOpenChange={(o) => {
         setPrintModalOpen(o)
-        if (!o) {
-          // After closing success, navigate to index so it refreshes
-          window.location.href = "/generate-surat"
-        }
       }}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>Surat tersimpan</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              Data surat berhasil disimpan
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Anda dapat mencetak sekarang atau nanti dari daftar surat.</p>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setPrintModalOpen(false)}>Tutup</Button>
-              <Button onClick={handlePrint}>Print / Download PDF</Button>
+              <Button onClick={() => {
+                handlePrint();
+                setPrintModalOpen(false);
+                window.location.href = "/generate-surat";
+              }}>Print / Download PDF</Button>
             </div>
           </div>
         </DialogContent>

@@ -18,6 +18,8 @@ import { Calendar } from "@/components/ui/calendar"
 export type LetterItem = StoredLetter
 
 type LettersDataTableProps = {
+  data?: LetterItem[]
+  loading?: boolean
   items?: LetterItem[]
   onCreateNew?: () => void
   onView?: (item: LetterItem) => void
@@ -28,28 +30,31 @@ type LettersDataTableProps = {
 
 // Mock data removed - now using real API data
 
-export function LettersDataTable({ items, onCreateNew, onView, onEdit, onDelete, onPrint }: LettersDataTableProps) {
+export function LettersDataTable({ data, loading, items, onCreateNew, onView, onEdit, onDelete, onPrint }: LettersDataTableProps) {
   const [search, setSearch] = useState("")
-  const [data, setData] = useState<LetterItem[]>(items ?? [])
+  const [internalData, setInternalData] = useState<LetterItem[]>(items ?? [])
   React.useEffect(() => {
     let cancelled = false
-    if (!items) {
-      listLettersQuery({}).then((res) => { if (!cancelled) setData(res) }).catch(() => {})
+    if (!items && !data) {
+      listLettersQuery({}).then((res) => { if (!cancelled) setInternalData(res) }).catch(() => {})
     }
     return () => { cancelled = true }
-  }, [items])
+  }, [items, data])
+
+  // Use external data if provided, otherwise use internal data
+  const currentData = data ?? internalData
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
   const [errorOpen, setErrorOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [internalLoading, setInternalLoading] = useState(false)
   const [target, setTarget] = useState<LetterItem | null>(null)
 
   const [type, setType] = useState<string>("")
   const [startDate, setStartDate] = useState<string>("")
   const [endDate, setEndDate] = useState<string>("")
   const [range, setRange] = useState<{ from?: Date; to?: Date }>({})
-  const filtered = data
+  const filtered = currentData
 
   React.useEffect(() => {
     if (items) return
@@ -57,9 +62,9 @@ export function LettersDataTable({ items, onCreateNew, onView, onEdit, onDelete,
     const t = setTimeout(async () => {
       try {
         const res = await listLettersQuery({ q: search || undefined, type: type || undefined, startDate: startDate || undefined, endDate: endDate || undefined })
-        setData(res)
+        setInternalData(res)
       } catch {
-        setData([])
+        setInternalData([])
       }
     }, 300)
     return () => { clearTimeout(t); controller.abort() }
@@ -76,17 +81,17 @@ export function LettersDataTable({ items, onCreateNew, onView, onEdit, onDelete,
   const handleConfirmDelete = async () => {
     if (!target) return
     try {
-      setLoading(true)
+      setInternalLoading(true)
       if (onDelete) await onDelete(target)
       else await deleteLetterService(target.id)
-      setData((prev) => prev.filter((x) => x.id !== target.id))
+      setInternalData((prev) => prev.filter((x) => x.id !== target.id))
       setConfirmOpen(false)
       setSuccessOpen(true)
     } catch (e) {
       setConfirmOpen(false)
       setErrorOpen(true)
     } finally {
-      setLoading(false)
+      setInternalLoading(false)
     }
   }
 
@@ -162,7 +167,13 @@ export function LettersDataTable({ items, onCreateNew, onView, onEdit, onDelete,
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {(loading || internalLoading) ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <AppText color="muted">Memuat data...</AppText>
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
                     <AppText color="muted">Belum ada surat</AppText>

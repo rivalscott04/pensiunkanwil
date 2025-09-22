@@ -92,6 +92,13 @@ class LetterController extends Controller
             'perihal' => [ 'nullable', 'string' ],
             'addressee_jabatan' => [ 'nullable', 'string' ],
             'addressee_kota' => [ 'nullable', 'string' ],
+            // New fields for special letter types
+            'tanggal_meninggal' => [ 'nullable', 'date' ],
+            'dasar_surat' => [ 'nullable', 'string' ],
+            'pegawai_data' => [ 'nullable', 'array' ],
+            'nomor_surat_rujukan' => [ 'nullable', 'string' ],
+            'tanggal_surat_rujukan' => [ 'nullable', 'date' ],
+            'perihal_surat_rujukan' => [ 'nullable', 'string' ],
         ]);
     }
 }

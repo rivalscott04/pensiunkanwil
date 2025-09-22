@@ -14,7 +14,6 @@ import { Search, MoreVertical, UserPlus, Shield, Pencil, Trash2 } from "lucide-r
 
 type UserItem = {
   id: number
-  nip: string
   name: string
   email: string
   role: string
@@ -35,7 +34,7 @@ export default function UsersPage() {
 
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<UserItem | null>(null)
-  const [form, setForm] = React.useState<any>({ nip: "", name: "", email: "", role: "operator", jabatan: "", status_user: "aktif" })
+  const [form, setForm] = React.useState<any>({ name: "", email: "", role: "operator", jabatan: "", status_user: "aktif" })
   
   const [impersonateOpen, setImpersonateOpen] = React.useState(false)
   const [impersonateSearch, setImpersonateSearch] = React.useState("")
@@ -69,12 +68,12 @@ export default function UsersPage() {
 
   const openAdd = () => {
     setEditing(null)
-    setForm({ nip: "", name: "", email: "", role: "operator", jabatan: "", status_user: "aktif" })
+    setForm({ name: "", email: "", role: "operator", jabatan: "", status_user: "aktif" })
     setDialogOpen(true)
   }
   const openEdit = (u: UserItem) => {
     setEditing(u)
-    setForm({ nip: u.nip, name: u.name, email: u.email, role: u.role, jabatan: u.jabatan ?? "", status_user: u.status_user })
+    setForm({ name: u.name, email: u.email, role: u.role, jabatan: u.jabatan ?? "", status_user: u.status_user })
     setDialogOpen(true)
   }
 
@@ -144,7 +143,7 @@ export default function UsersPage() {
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1) }} placeholder="Cari nama, email, NIP..." className="pl-9" />
+              <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1) }} placeholder="Cari nama, email, jabatan..." className="pl-9" />
             </div>
           </div>
 
@@ -154,7 +153,6 @@ export default function UsersPage() {
                 <TableRow className="bg-muted/50">
                   <TableHead>Nama</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>NIP</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
@@ -163,7 +161,7 @@ export default function UsersPage() {
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       <AppText color="muted">Tidak ada data</AppText>
                     </TableCell>
                   </TableRow>
@@ -171,7 +169,6 @@ export default function UsersPage() {
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell className="font-mono text-sm">{u.email}</TableCell>
-                    <TableCell className="font-mono text-sm">{u.nip}</TableCell>
                     <TableCell className="capitalize">{u.role}</TableCell>
                     <TableCell className="capitalize">{u.status_user}</TableCell>
                     <TableCell className="text-right">
@@ -202,8 +199,7 @@ export default function UsersPage() {
               <DialogTitle>{editing ? 'Edit User' : 'Tambah User'}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="md:col-span-1"><Input placeholder="NIP" value={form.nip} onChange={(e) => setForm({ ...form, nip: e.target.value })} /></div>
-              <div className="md:col-span-1"><Input placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="md:col-span-2"><Input placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div className="md:col-span-2"><Input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div className="md:col-span-1">
                 <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>

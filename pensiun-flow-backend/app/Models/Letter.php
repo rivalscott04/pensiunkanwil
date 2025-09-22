@@ -29,10 +29,19 @@ class Letter extends Model
         'perihal',
         'addressee_jabatan',
         'addressee_kota',
+        'tanggal_meninggal',
+        'dasar_surat',
+        'pegawai_data',
+        'nomor_surat_rujukan',
+        'tanggal_surat_rujukan',
+        'perihal_surat_rujukan',
     ];
 
     protected $casts = [
         'tanggal_surat' => 'date',
+        'tanggal_meninggal' => 'date',
+        'tanggal_surat_rujukan' => 'date',
+        'pegawai_data' => 'array',
     ];
 }
 

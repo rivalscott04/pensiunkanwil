@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import SuratKeteranganMeninggalTemplate from "@/components/pension/SuratKeteranganMeninggalTemplate";
 import { PegawaiSelector, PejabatSelector, Personnel } from "@/components/pension/personnel-selectors";
+import { saveLetterService } from "@/lib/letters-service";
 
 export default function GenerateSuratMeninggal() {
   const url = new URL(window.location.href);
@@ -17,6 +18,8 @@ export default function GenerateSuratMeninggal() {
   const editId = url.searchParams.get("edit");
 
   const [printModalOpen, setPrintModalOpen] = React.useState<boolean>(false);
+  const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
+  const [saving, setSaving] = React.useState<boolean>(false);
   // Logo fixed to /logo-kemenag.png per request
   const [documentSequence, setDocumentSequence] = React.useState<string>("");
   const [documentMonth, setDocumentMonth] = React.useState<string>("");
@@ -77,6 +80,50 @@ export default function GenerateSuratMeninggal() {
 
     setErrors(next);
     return next;
+  };
+
+  const handleSave = async () => {
+    const v = validate();
+    if (Object.keys(v).length > 0) {
+      const firstKey = Object.keys(v)[0];
+      const el = document.getElementById(`field-${firstKey}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const id = reprintId || editId || `LET-${Date.now()}`;
+    const payload: any = {
+      id,
+      nomorSurat: documentNumber,
+      tanggalSurat: signatureDateInput || new Date().toISOString().split('T')[0],
+      namaPegawai: pegawai?.name || "",
+      nipPegawai: pegawai?.nip,
+      posisiPegawai: pegawai?.position,
+      unitPegawai: pegawai?.unit,
+      namaPenandatangan: pejabat?.name || "",
+      nipPenandatangan: pejabat?.nip,
+      jabatanPenandatangan: pejabat?.position,
+      signaturePlace,
+      signatureDateInput: signatureDateInput || new Date().toISOString().split('T')[0],
+      signatureMode,
+      signatureAnchor,
+      type: 'surat_meninggal',
+      perihal: 'Surat Keterangan Meninggal',
+      tanggalMeninggal,
+      dasarSurat,
+    };
+    
+    try {
+      setSaving(true)
+      // Save directly to database
+      await saveLetterService(payload)
+      setPrintModalOpen(true)
+    } catch (e) {
+      console.error('Failed to save letter:', e)
+      setErrorModalOpen(true)
+    } finally {
+      setSaving(false)
+    }
   };
 
   const handlePrint = () => {
@@ -230,7 +277,7 @@ export default function GenerateSuratMeninggal() {
               </div>
 
               <div className="pt-2">
-                <Button onClick={() => { const v = validate(); if (Object.keys(v).length === 0) setPrintModalOpen(true); }}>Pratinjau & Cetak</Button>
+                <Button onClick={handleSave} disabled={saving}>{saving ? "Menyimpan..." : "Simpan"}</Button>
               </div>
             </CardContent>
           </Card>
@@ -246,16 +293,43 @@ export default function GenerateSuratMeninggal() {
         </div>
       </div>
 
-      <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
+      <Dialog open={printModalOpen} onOpenChange={(o) => {
+        setPrintModalOpen(o)
+      }}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>Cetak Surat</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              Data surat berhasil disimpan
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Pastikan data sudah benar sebelum mencetak.</p>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setPrintModalOpen(false)}>Tutup</Button>
-              <Button onClick={handlePrint}>Print / Download PDF</Button>
+              <Button onClick={() => {
+                handlePrint();
+                setPrintModalOpen(false);
+                window.location.href = "/generate-surat";
+              }}>Print / Download PDF</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error modal on failed save */}
+      <Dialog open={errorModalOpen} onOpenChange={setErrorModalOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Gagal menyimpan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Terjadi kesalahan saat menyimpan ke server. Silakan coba lagi.</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setErrorModalOpen(false)}>Tutup</Button>
             </div>
           </div>
         </DialogContent>

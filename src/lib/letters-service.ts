@@ -45,6 +45,19 @@ function fromApi(api: any): StoredLetter {
     addresseeJabatan: api.addressee_jabatan,
     // @ts-ignore extend
     addresseeKota: api.addressee_kota,
+    // New fields for special letter types
+    // @ts-ignore extend
+    tanggalMeninggal: api.tanggal_meninggal,
+    // @ts-ignore extend
+    dasarSurat: api.dasar_surat,
+    // @ts-ignore extend
+    pegawaiData: api.pegawai_data,
+    // @ts-ignore extend
+    nomorSuratRujukan: api.nomor_surat_rujukan,
+    // @ts-ignore extend
+    tanggalSuratRujukan: api.tanggal_surat_rujukan,
+    // @ts-ignore extend
+    perihalSuratRujukan: api.perihal_surat_rujukan,
   }
 }
 
@@ -70,6 +83,13 @@ function toApi(ui: StoredLetter): any {
     perihal: (ui as any).perihal ?? null,
     addressee_jabatan: (ui as any).addresseeJabatan ?? null,
     addressee_kota: (ui as any).addresseeKota ?? null,
+    // New fields for special letter types
+    tanggal_meninggal: (ui as any).tanggalMeninggal ?? null,
+    dasar_surat: (ui as any).dasarSurat ?? null,
+    pegawai_data: (ui as any).pegawaiData ?? null,
+    nomor_surat_rujukan: (ui as any).nomorSuratRujukan ?? null,
+    tanggal_surat_rujukan: (ui as any).tanggalSuratRujukan ?? null,
+    perihal_surat_rujukan: (ui as any).perihalSuratRujukan ?? null,
   }
 }
 

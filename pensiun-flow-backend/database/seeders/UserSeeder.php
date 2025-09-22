@@ -17,7 +17,6 @@ class UserSeeder extends Seeder
     {
         // Admin Kanwil (Superadmin)
         DB::table('users')->insert([
-            'nip' => '197001011990031001',
             'name' => 'Admin Kanwil NTB',
             'email' => 'adminkanwil@kemenag.go.id',
             'password' => Hash::make('password'),
@@ -29,7 +28,6 @@ class UserSeeder extends Seeder
 
         // Admin Pusat
         DB::table('users')->insert([
-            'nip' => '197501011995032002',
             'name' => 'Admin Pusat',
             'email' => 'adminpusat@kemenag.go.id',
             'password' => Hash::make('password'),
@@ -39,14 +37,38 @@ class UserSeeder extends Seeder
             'status_user' => 'aktif'
         ]);
 
+        // Petugas
+        DB::table('users')->insert([
+            'name' => 'Petugas Kemenag NTB',
+            'email' => 'petugas@kemenag.go.id',
+            'password' => Hash::make('password'),
+            'role' => 'petugas',
+            'kabupaten_id' => null,
+            'jabatan' => 'Petugas Kemenag NTB',
+            'status_user' => 'aktif'
+        ]);
+
         // Operators for all kabupaten/kota in NTB
-        $regions = DB::table('kabupaten')->select('id','nama')->get();
+        $regions = DB::table('kabupaten')->select('id','nama','jenis')->get();
         foreach ($regions as $idx => $region) {
-            $slug = Str::slug($region->nama, '.');
+            // Create shorter email based on region name and type
+            $regionName = strtolower($region->nama);
+            
+            if ($region->jenis === 'kabupaten') {
+                // Remove "kabupaten" prefix and get the main name
+                $regionName = trim(str_replace('kabupaten', '', $regionName));
+            } elseif ($region->jenis === 'kota') {
+                // Remove "kota" prefix and add "kota" prefix to main name
+                $regionName = trim(str_replace('kota', '', $regionName));
+                $regionName = 'kota' . $regionName;
+            }
+            
+            // Clean up the name (remove extra spaces, etc.)
+            $regionName = preg_replace('/\s+/', '', $regionName);
+            
             DB::table('users')->insert([
-                'nip' => '1980'.str_pad((string)($idx+1), 10, '0', STR_PAD_LEFT),
                 'name' => 'Operator '.$region->nama,
-                'email' => 'operator.'.$slug.'@kemenag.go.id',
+                'email' => $regionName.'@kemenag.go.id',
                 'password' => Hash::make('password'),
                 'role' => 'operator',
                 'kabupaten_id' => $region->id,

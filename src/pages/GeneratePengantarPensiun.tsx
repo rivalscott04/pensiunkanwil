@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
@@ -131,30 +132,51 @@ export default function GeneratePengantarPensiun() {
     } else { setTimeout(() => document.body.removeChild(frame), 1000); }
   };
 
-  const handleSaveBackend = async () => {
+  const [printModalOpen, setPrintModalOpen] = React.useState<boolean>(false);
+  const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
+  const [saving, setSaving] = React.useState<boolean>(false);
+
+  const handleSave = async () => {
+    const payload: any = {
+      id: "",
+      nomorSurat: finalNomorSurat,
+      tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+      namaPegawai: pegawaiList[0]?.name || "",
+      nipPegawai: pegawaiList[0]?.nip || "",
+      posisiPegawai: pegawaiList[0]?.position || "",
+      unitPegawai: pegawaiList[0]?.unit || "",
+      namaPenandatangan: pejabat?.name || "",
+      nipPenandatangan: pejabat?.nip || "",
+      jabatanPenandatangan: pejabat?.position || "",
+      signaturePlace: tempat,
+      signatureDateInput: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
+      signatureMode,
+      signatureAnchor: "^",
+      type: "pengantar_pensiun",
+      perihal: "Usul Pensiun BUP, J/D /KPP",
+      addresseeJabatan: addresseeJabatan,
+      addresseeKota: addresseeKota,
+      pegawaiData: pegawaiList.map(p => ({
+        name: p.name,
+        nip: p.nip,
+        position: p.position,
+        unit: p.unit,
+        golongan: p.golongan,
+        ...rowExtras[(p.nip || "").replace(/\D+/g, "")]
+      })),
+    }
+    
     try {
-      const payload: any = {
-        id: "",
-        nomorSurat: finalNomorSurat,
-        tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
-        namaPegawai: pegawaiList[0]?.name || "",
-        nipPegawai: pegawaiList[0]?.nip || "",
-        posisiPegawai: pegawaiList[0]?.position || "",
-        unitPegawai: pegawaiList[0]?.unit || "",
-        namaPenandatangan: pejabat?.name || "",
-        nipPenandatangan: pejabat?.nip || "",
-        jabatanPenandatangan: pejabat?.position || "",
-        signaturePlace: tempat,
-        signatureDateInput: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
-        signatureMode,
-        signatureAnchor: "^",
-        type: "pengantar_pensiun",
-        perihal: "Usul Pensiun BUP, J/D /KPP",
-        addresseeJabatan: addresseeJabatan,
-        addresseeKota: addresseeKota,
-      }
+      setSaving(true)
+      // Save directly to database
       await saveLetterService(payload)
-    } catch {}
+      setPrintModalOpen(true)
+    } catch (e) {
+      console.error('Failed to save letter:', e)
+      setErrorModalOpen(true)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -335,7 +357,7 @@ export default function GeneratePengantarPensiun() {
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => window.history.back()}>Batal</Button>
-                <Button onClick={async () => { await handleSaveBackend(); handlePrint(); }}>Print / Download PDF</Button>
+                <Button onClick={handleSave} disabled={saving}>{saving ? "Menyimpan..." : "Simpan"}</Button>
               </div>
             </CardContent>
           </Card>
@@ -369,6 +391,48 @@ export default function GeneratePengantarPensiun() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={printModalOpen} onOpenChange={(o) => {
+        setPrintModalOpen(o)
+      }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              Data surat berhasil disimpan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setPrintModalOpen(false)}>Tutup</Button>
+              <Button onClick={() => {
+                handlePrint();
+                setPrintModalOpen(false);
+                window.location.href = "/generate-surat";
+              }}>Print / Download PDF</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error modal on failed save */}
+      <Dialog open={errorModalOpen} onOpenChange={setErrorModalOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Gagal menyimpan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Terjadi kesalahan saat menyimpan ke server. Silakan coba lagi.</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setErrorModalOpen(false)}>Tutup</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

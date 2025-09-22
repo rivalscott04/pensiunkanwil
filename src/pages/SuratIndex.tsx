@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { LettersDataTable } from "@/components/pension/letters-data-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { KemenagDocumentTemplate } from "@/components/pension/KemenagDocumentTemplate"
-import { getLetters } from "@/lib/letters"
+import { listLetters } from "@/lib/letters-service"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -111,7 +111,27 @@ export default function SuratIndex() {
   const [viewOpen, setViewOpen] = React.useState(false)
   const [viewLetterId, setViewLetterId] = React.useState<string | null>(null)
 
-  const letter = React.useMemo(() => getLetters().find(l => l.id === printLetterId) || null, [printLetterId])
+  const [letters, setLetters] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  // Load letters from database
+  React.useEffect(() => {
+    const loadLetters = async () => {
+      try {
+        setLoading(true)
+        const data = await listLetters()
+        setLetters(data)
+      } catch (error) {
+        console.error('Failed to load letters:', error)
+        setLetters([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadLetters()
+  }, [])
+
+  const letter = React.useMemo(() => letters.find(l => l.id === printLetterId) || null, [letters, printLetterId])
 
   const documentNumberPage = letter?.nomorSurat || ""
   const signatureDate = React.useMemo(() => {
@@ -170,6 +190,8 @@ export default function SuratIndex() {
     <AppLayout>
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <LettersDataTable 
+          data={letters}
+          loading={loading}
           onCreateNew={handleCreate}
           onView={(item) => { setViewLetterId(item.id); setViewOpen(true) }}
           onEdit={(item) => {
