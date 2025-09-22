@@ -45,14 +45,30 @@ export default function DocumentUpload() {
       if (!employee || !pensionType || pengajuanId) return
 
       try {
+        // Map UI pension type ids to backend accepted enum values
+        const toBackendJenis = (type: string): 'BUP' | 'APS' | 'Janda/Duda' | 'Sakit' => {
+          switch (type) {
+            case 'bup':
+              return 'BUP'
+            case 'aps':
+              return 'APS'
+            case 'janda_duda':
+              return 'Janda/Duda'
+            case 'sakit':
+              return 'Sakit'
+            default:
+              return 'BUP'
+          }
+        }
+
         const applicationData: CreatePensionApplicationRequest = {
           nip_pegawai: employee.nip,
           nama_pegawai: employee.nama,
           jabatan: employee.jabatan,
           unit_kerja: employee.unitKerja,
           pangkat_golongan: employee.golongan,
-          jenis_pensiun: pensionType,
-          catatan: `Pengajuan pensiun ${pensionType.toUpperCase()} untuk ${employee.nama}`
+          jenis_pensiun: toBackendJenis(pensionType),
+          catatan: `Pengajuan pensiun ${toBackendJenis(pensionType)} untuk ${employee.nama}`
         }
 
         const createdApp = await apiCreatePensionApplication(applicationData)

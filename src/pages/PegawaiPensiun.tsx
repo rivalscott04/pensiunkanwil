@@ -104,6 +104,22 @@ export default function PegawaiPensiun() {
     setIsSubmitting(true)
     
     try {
+      // Map UI pension type ids to backend accepted enum values
+      const toBackendJenis = (type: string): 'BUP' | 'APS' | 'Janda/Duda' | 'Sakit' => {
+        switch (type) {
+          case 'bup':
+            return 'BUP'
+          case 'aps':
+            return 'APS'
+          case 'janda_duda':
+            return 'Janda/Duda'
+          case 'sakit':
+            return 'Sakit'
+          default:
+            return 'BUP'
+        }
+      }
+
       // Step 1: Create pension application
       const applicationData: CreatePensionApplicationRequest = {
         nip_pegawai: selectedEmployee.nip,
@@ -111,8 +127,8 @@ export default function PegawaiPensiun() {
         jabatan: selectedEmployee.jabatan,
         unit_kerja: selectedEmployee.unitKerja,
         pangkat_golongan: selectedEmployee.golongan,
-        jenis_pensiun: selectedPensionType,
-        catatan: `Pengajuan pensiun ${selectedPensionType.toUpperCase()} untuk ${selectedEmployee.nama}`
+        jenis_pensiun: toBackendJenis(selectedPensionType),
+        catatan: `Pengajuan pensiun ${toBackendJenis(selectedPensionType)} untuk ${selectedEmployee.nama}`
       }
 
       const createdApp = await apiCreatePensionApplication(applicationData)
