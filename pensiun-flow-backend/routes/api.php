@@ -30,7 +30,7 @@ Route::get('/sync/status', [SyncController::class, 'syncStatus']);
 Route::get('/employees', function () {
     $perPage = (int) request()->query('per_page', request()->query('perPage', 10));
     if ($perPage <= 0) { $perPage = 10; }
-    if ($perPage > 100) { $perPage = 100; }
+    if ($perPage > 10000) { $perPage = 10000; }
 
     $q = trim((string) request()->query('q', ''));
 
@@ -43,6 +43,11 @@ Route::get('/employees', function () {
             });
         })
         ->orderBy('nama');
+
+    // If requesting all data (per_page >= 10000), return all without pagination
+    if ($perPage >= 10000) {
+        return $query->get();
+    }
 
     return $query->paginate($perPage);
 });

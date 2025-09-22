@@ -68,9 +68,10 @@ export function EmployeeDataTable({ onEmployeeSelect, selectedEmployee }: Employ
   const loadEmployees = async () => {
     try {
       // Load all employees at once for local filtering
-      const resp = await fetch(`${API_BASE_URL || ''}/api/employees?per_page=1000`, { credentials: 'include' })
+      const resp = await fetch(`${API_BASE_URL || ''}/api/employees?per_page=10000`, { credentials: 'include' })
       if (!resp.ok) return
       const json = await resp.json()
+      // Handle both paginated response and direct array response
       const items = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []
       const mapped: Employee[] = items.map((it: any) => ({
         id: String(it.id ?? it.nip ?? Math.random()),
