@@ -165,12 +165,7 @@ export type PensionApplication = {
   jabatan?: string
   unit_kerja?: string
   pangkat_golongan?: string
-  tanggal_lahir?: string
-  tanggal_mulai_kerja?: string
-  masa_kerja_tahun?: number
-  masa_kerja_bulan?: number
-  jenis_pensiun: 'normal' | 'dipercepat' | 'khusus'
-  tanggal_pensiun?: string
+  jenis_pensiun?: string
   status: 'draft' | 'diajukan' | 'diterima' | 'ditolak'
   catatan?: string
   tanggal_pengajuan?: string
@@ -186,12 +181,7 @@ export type CreatePensionApplicationRequest = {
   jabatan?: string
   unit_kerja?: string
   pangkat_golongan?: string
-  tanggal_lahir?: string
-  tanggal_mulai_kerja?: string
-  masa_kerja_tahun?: number
-  masa_kerja_bulan?: number
-  jenis_pensiun: 'normal' | 'dipercepat' | 'khusus'
-  tanggal_pensiun?: string
+  jenis_pensiun?: string
   catatan?: string
 }
 

@@ -49,17 +49,14 @@ interface Application {
   tanggalPengajuan: string
   namaPegawai: string
   nip: string
-  jenisPensiun: string
   status: 'draft' | 'diajukan' | 'diterima' | 'ditolak'
   tanggalUpdate: string
   tempatLahir: string
-  tanggalLahir: string
   alamat: string
   noTelp: string
   email: string
   unitKerja: string
   jabatan: string
-  masaKerja: string
   documents: Document[]
   statusHistory: Array<{
     status: string
@@ -107,17 +104,14 @@ export default function DetailPengajuan() {
         tanggalPengajuan: it.tanggal_pengajuan ?? it.created_at ?? '',
         namaPegawai: it.nama_pegawai ?? '',
         nip: it.nip_pegawai ?? '',
-        jenisPensiun: it.jenis_pensiun ?? 'Pensiun Normal',
         status: it.status ?? 'draft',
         tanggalUpdate: it.updated_at ?? it.tanggal_pengajuan ?? '',
         tempatLahir: it.tempat_lahir ?? '',
-        tanggalLahir: it.tanggal_lahir ?? '',
         alamat: it.alamat ?? '',
         noTelp: it.no_telp ?? '',
         email: it.email ?? '',
         unitKerja: it.unit_kerja ?? '',
         jabatan: it.jabatan ?? '',
-        masaKerja: it.masa_kerja ?? '',
         documents: Array.isArray(it.files) ? it.files.map((f: any) => ({
           id: String(f.id),
           name: f.nama_asli ?? f.nama_file ?? 'Dokumen',
@@ -320,7 +314,7 @@ export default function DetailPengajuan() {
                   </span>
                   <span className="flex items-center gap-1">
                     <FileText className="h-4 w-4" />
-                    {application.jenisPensiun}
+                    Pengajuan Pensiun
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
@@ -372,7 +366,7 @@ export default function DetailPengajuan() {
                   <div className="grid gap-3">
                     <div>
                       <Label className="text-sm font-medium">Tempat, Tanggal Lahir</Label>
-                      <AppText>{application.tempatLahir}, {formatDate(application.tanggalLahir)}</AppText>
+                      <AppText>{application.tempatLahir}</AppText>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Alamat</Label>
@@ -406,10 +400,6 @@ export default function DetailPengajuan() {
                     <div>
                       <Label className="text-sm font-medium">Jabatan</Label>
                       <AppText>{application.jabatan}</AppText>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Masa Kerja</Label>
-                      <AppText>{application.masaKerja}</AppText>
                     </div>
                   </div>
                 </CardContent>

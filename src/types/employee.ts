@@ -7,10 +7,6 @@ export interface Employee {
   unitKerja: string;
   status: 'eligible' | 'pending' | 'processed';
   jabatan?: string;
-  tanggalLahir?: string;
-  tanggalMulaiKerja?: string;
-  masaKerjaTahun?: number;
-  masaKerjaBulan?: number;
 }
 
 // Mock data removed - now using real API data

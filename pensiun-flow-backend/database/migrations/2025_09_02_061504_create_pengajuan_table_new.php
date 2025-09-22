@@ -21,13 +21,7 @@ return new class extends Migration
             $table->string('jabatan', 255)->nullable();
             $table->string('unit_kerja', 255)->nullable();
             $table->string('pangkat_golongan', 50)->nullable();
-            $table->date('tanggal_lahir')->nullable();
-            $table->date('tanggal_mulai_kerja')->nullable();
-            $table->integer('masa_kerja_tahun')->default(0);
-            $table->integer('masa_kerja_bulan')->default(0);
-            $table->decimal('gaji_pokok', 15, 2)->nullable();
-            $table->enum('jenis_pensiun', ['normal', 'dipercepat', 'khusus'])->default('normal');
-            $table->date('tanggal_pensiun')->nullable();
+            $table->enum('jenis_pensiun', ['BUP', 'APS', 'Janda/Duda', 'Sakit'])->default('BUP');
             $table->enum('status', ['draft', 'diajukan', 'diterima', 'ditolak'])->default('draft');
             $table->text('catatan')->nullable();
             $table->timestamp('tanggal_pengajuan')->nullable();

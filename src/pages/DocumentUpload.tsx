@@ -51,12 +51,7 @@ export default function DocumentUpload() {
           jabatan: employee.jabatan,
           unit_kerja: employee.unitKerja,
           pangkat_golongan: employee.golongan,
-          tanggal_lahir: employee.tanggalLahir,
-          tanggal_mulai_kerja: employee.tanggalMulaiKerja,
-          masa_kerja_tahun: employee.masaKerjaTahun,
-          masa_kerja_bulan: employee.masaKerjaBulan,
-          jenis_pensiun: mapPensionTypeToBackend(pensionType),
-          tanggal_pensiun: employee.tmtPensiun,
+          jenis_pensiun: pensionType,
           catatan: `Pengajuan pensiun ${pensionType.toUpperCase()} untuk ${employee.nama}`
         }
 

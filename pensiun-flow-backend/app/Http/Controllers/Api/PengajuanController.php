@@ -41,9 +41,6 @@ class PengajuanController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->has('jenis_pensiun')) {
-            $query->where('jenis_pensiun', $request->jenis_pensiun);
-        }
 
         if ($request->has('kabupaten_id')) {
             $query->where('kabupaten_id', $request->kabupaten_id);
@@ -107,12 +104,7 @@ class PengajuanController extends Controller
             'jabatan' => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
             'pangkat_golongan' => 'nullable|string|max:50',
-            'tanggal_lahir' => 'nullable|date',
-            'tanggal_mulai_kerja' => 'nullable|date',
-            'masa_kerja_tahun' => 'nullable|integer|min:0',
-            'masa_kerja_bulan' => 'nullable|integer|min:0|max:11',
-            'jenis_pensiun' => 'required|in:normal,dipercepat,khusus',
-            'tanggal_pensiun' => 'nullable|date',
+            'jenis_pensiun' => 'required|in:BUP,APS,Janda/Duda,Sakit',
             'catatan' => 'nullable|string'
         ]);
 
@@ -144,12 +136,7 @@ class PengajuanController extends Controller
                 'jabatan' => $request->jabatan,
                 'unit_kerja' => $request->unit_kerja,
                 'pangkat_golongan' => $request->pangkat_golongan,
-                'tanggal_lahir' => $request->tanggal_lahir,
-                'tanggal_mulai_kerja' => $request->tanggal_mulai_kerja,
-                'masa_kerja_tahun' => $request->masa_kerja_tahun,
-                'masa_kerja_bulan' => $request->masa_kerja_bulan,
                 'jenis_pensiun' => $request->jenis_pensiun,
-                'tanggal_pensiun' => $request->tanggal_pensiun,
                 'catatan' => $request->catatan,
                 'status' => 'draft'
             ]);
@@ -210,12 +197,7 @@ class PengajuanController extends Controller
             'jabatan' => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
             'pangkat_golongan' => 'nullable|string|max:50',
-            'tanggal_lahir' => 'nullable|date',
-            'tanggal_mulai_kerja' => 'nullable|date',
-            'masa_kerja_tahun' => 'nullable|integer|min:0',
-            'masa_kerja_bulan' => 'nullable|integer|min:0|max:11',
-            'jenis_pensiun' => 'required|in:normal,dipercepat,khusus',
-            'tanggal_pensiun' => 'nullable|date',
+            'jenis_pensiun' => 'required|in:BUP,APS,Janda/Duda,Sakit',
             'catatan' => 'nullable|string'
         ]);
 

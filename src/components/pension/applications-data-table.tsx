@@ -41,7 +41,6 @@ export function ApplicationsDataTable({
   const [applications, setApplications] = useState<Application[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("semua")
-  const [jenisPensiunFilter, setJenisPensiunFilter] = useState<string>("semua")
   const [statusModalOpen, setStatusModalOpen] = useState(false)
   const [selectedApplicationForStatus, setSelectedApplicationForStatus] = useState<Application | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -55,7 +54,6 @@ export function ApplicationsDataTable({
     if (searchQuery.trim()) params.set('search', searchQuery.trim())
     // Backend supports 'status' and 'jenis_pensiun' filters
     if (statusFilter !== 'semua') params.set('status', statusFilter)
-    if (jenisPensiunFilter !== 'semua') params.set('jenis_pensiun', jenisPensiunFilter)
     const url = `${API_BASE_URL || ''}/api/pengajuan?${params.toString()}`
     try {
       const res = await fetch(url, { headers: { 'Accept': 'application/json', ...getAuthHeaders() } })
@@ -71,7 +69,7 @@ export function ApplicationsDataTable({
         tanggalPengajuan: it.tanggal_pengajuan ?? it.created_at ?? '',
         namaPegawai: it.nama_pegawai ?? '',
         nip: it.nip_pegawai ?? '',
-        jenisPensiun: it.jenis_pensiun ?? 'Pensiun Normal',
+        jenisPensiun: it.jenis_pensiun ?? 'BUP',
         status: (it.status as Application['status']) ?? 'draft',
         tanggalUpdate: it.updated_at ?? it.tanggal_pengajuan ?? ''
       }))
@@ -92,7 +90,7 @@ export function ApplicationsDataTable({
   useEffect(() => {
     loadApplications()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, statusFilter, jenisPensiunFilter])
+  }, [searchQuery, statusFilter])
 
   // Filter applications based on search and filters
   const filteredApplications = applications.filter(app => {
@@ -100,9 +98,8 @@ export function ApplicationsDataTable({
                          app.nip.includes(searchQuery)
     
     const matchesStatus = statusFilter === "semua" || app.status === statusFilter
-    const matchesJenisPensiun = jenisPensiunFilter === "semua" || app.jenisPensiun === jenisPensiunFilter
     
-    return matchesSearch && matchesStatus && matchesJenisPensiun
+    return matchesSearch && matchesStatus
   })
 
   const getStatusBadge = (status: Application['status'], onClick?: () => void) => {
@@ -213,22 +210,6 @@ export function ApplicationsDataTable({
             </Select>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-          >
-            <Select value={jenisPensiunFilter} onValueChange={setJenisPensiunFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Jenis Pensiun" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="semua">Semua Jenis</SelectItem>
-                <SelectItem value="Pensiun Normal">Pensiun Normal</SelectItem>
-                <SelectItem value="Pensiun Dipercepat">Pensiun Dipercepat</SelectItem>
-              </SelectContent>
-            </Select>
-          </motion.div>
 
           <motion.div 
             className="flex items-center"

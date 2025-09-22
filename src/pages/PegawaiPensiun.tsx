@@ -111,12 +111,7 @@ export default function PegawaiPensiun() {
         jabatan: selectedEmployee.jabatan,
         unit_kerja: selectedEmployee.unitKerja,
         pangkat_golongan: selectedEmployee.golongan,
-        tanggal_lahir: selectedEmployee.tanggalLahir,
-        tanggal_mulai_kerja: selectedEmployee.tanggalMulaiKerja,
-        masa_kerja_tahun: selectedEmployee.masaKerjaTahun,
-        masa_kerja_bulan: selectedEmployee.masaKerjaBulan,
-        jenis_pensiun: mapPensionTypeToBackend(selectedPensionType),
-        tanggal_pensiun: selectedEmployee.tmtPensiun,
+        jenis_pensiun: selectedPensionType,
         catatan: `Pengajuan pensiun ${selectedPensionType.toUpperCase()} untuk ${selectedEmployee.nama}`
       }
 

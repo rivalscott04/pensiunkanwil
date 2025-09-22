@@ -20,13 +20,7 @@ class Pengajuan extends Model
         'jabatan',
         'unit_kerja',
         'pangkat_golongan',
-        'tanggal_lahir',
-        'tanggal_mulai_kerja',
-        'masa_kerja_tahun',
-        'masa_kerja_bulan',
-        'gaji_pokok',
         'jenis_pensiun',
-        'tanggal_pensiun',
         'status',
         'catatan',
         'tanggal_pengajuan',
@@ -35,12 +29,8 @@ class Pengajuan extends Model
     ];
 
     protected $casts = [
-        'tanggal_lahir' => 'date',
-        'tanggal_mulai_kerja' => 'date',
-        'tanggal_pensiun' => 'date',
         'tanggal_pengajuan' => 'datetime',
-        'tanggal_approval' => 'datetime',
-        'gaji_pokok' => 'decimal:2'
+        'tanggal_approval' => 'datetime'
     ];
 
     /**
