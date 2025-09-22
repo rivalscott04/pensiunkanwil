@@ -32,7 +32,7 @@ class PengajuanController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
-        if ($user->isOperator()) {
+        if ($user->isOperator() && !$user->isSuperAdmin()) {
             $query->where('kabupaten_id', $user->kabupaten_id);
         }
 
@@ -75,7 +75,7 @@ class PengajuanController extends Controller
     {
         // Check authorization
         $user = auth()->user();
-        if ($user->isOperator() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
+        if ($user->isOperator() && !$user->isSuperAdmin() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized access'
@@ -119,11 +119,11 @@ class PengajuanController extends Controller
 
         $user = auth()->user();
         
-        // Check if user is operator
-        if (!$user->isOperator()) {
+        // Check if user is operator or superadmin
+        if (!$user->isOperator() && !$user->isSuperAdmin()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Only operators can create pengajuan'
+                'message' => 'Only operators and superadmin can create pengajuan'
             ], 403);
         }
 
@@ -184,7 +184,7 @@ class PengajuanController extends Controller
     {
         // Check authorization
         $user = auth()->user();
-        if ($user->isOperator() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
+        if ($user->isOperator() && !$user->isSuperAdmin() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized access'
@@ -247,7 +247,7 @@ class PengajuanController extends Controller
     {
         // Check authorization
         $user = auth()->user();
-        if ($user->isOperator() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
+        if ($user->isOperator() && !$user->isSuperAdmin() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized access'
@@ -306,7 +306,7 @@ class PengajuanController extends Controller
     {
         // Check authorization
         $user = auth()->user();
-        if ($user->isOperator() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
+        if ($user->isOperator() && !$user->isSuperAdmin() && $pengajuan->kabupaten_id !== $user->kabupaten_id) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized access'
@@ -424,7 +424,7 @@ class PengajuanController extends Controller
             $query = Pengajuan::query();
 
             // Apply role-based filtering
-            if ($user->isOperator()) {
+            if ($user->isOperator() && !$user->isSuperAdmin()) {
                 $query->where('kabupaten_id', $user->kabupaten_id);
             }
 
