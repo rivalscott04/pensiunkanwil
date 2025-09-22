@@ -11,7 +11,7 @@
     "build:dev": "vite build --mode development",
     "build:network": "cross-env VITE_API_BASE_URL=http://192.168.110.28:8000 vite build",
     "build:local": "cross-env VITE_API_BASE_URL=http://localhost:8000 vite build",
-    "build:production": "cross-env VITE_API_BASE_URL=https://supensi.rivaldev.site/api vite build",
+    "build:production": "cross-env VITE_API_BASE_URL=https://api.supensi.rivaldev.site vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

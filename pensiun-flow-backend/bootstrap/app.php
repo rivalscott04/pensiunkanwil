@@ -21,8 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'any.role' => \App\Http\Middleware\CheckAnyRole::class,
         ]);
         
-        // Configure Sanctum
-        $middleware->statefulApi(['api/*']);
+        // Configure Sanctum - disable stateful API untuk menghindari CSRF issues
+        // $middleware->statefulApi(['api/*']);
 
         // Use default Laravel CORS (config/cors.php)
     })

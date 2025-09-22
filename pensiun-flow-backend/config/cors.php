@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*'],
 
     'allowed_methods' => ['*'],
 
@@ -14,6 +14,8 @@ return [
         'http://192.168.110.28:8080',
         'https://supensi.rivaldev.site',
         'http://supensi.rivaldev.site',
+        'https://api.supensi.rivaldev.site',
+        'http://api.supensi.rivaldev.site',
     ],
 
     'allowed_origins_patterns' => [

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoginIllustration } from "@/components/illustrations/LoginIllustration"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { API_BASE_URL } from "@/lib/api"
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
@@ -75,10 +76,9 @@ export default function Login() {
     
     setLoading(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ email, password })
       })
       const json = await res.json().catch(() => ({}))
