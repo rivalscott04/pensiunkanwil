@@ -42,7 +42,7 @@ Route::get('/employees', function () {
                   ->orWhere('unit_kerja', 'like', "%{$q}%");
             });
         })
-        ->whereDate('tmt_pensiun', '<=', \Illuminate\Support\Carbon::today())
+        ->whereYear('tmt_pensiun', date('Y'))
         ->orderBy('nama');
 
     return $query->paginate($perPage);
