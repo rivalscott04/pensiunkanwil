@@ -137,10 +137,13 @@ export default function GeneratePengantarGelar() {
               margin: 2cm;
             }
             body {
-              font-family: 'Times New Roman', serif;
-              font-size: 12pt;
+              font-family: Arial, sans-serif;
+              font-size: 10.5pt;
               line-height: 1.6;
               color: #000;
+            }
+            h1, h2, h3, h4, h5, h6 {
+              font-size: 11.5pt;
             }
             .print-content {
               max-width: 100%;

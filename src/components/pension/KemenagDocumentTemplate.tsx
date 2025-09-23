@@ -64,9 +64,9 @@ export const KemenagDocumentTemplate: React.FC<KemenagTemplateProps> = (props) =
         .content-wrapper { margin: 0 1cm; }
         .header { border-bottom: 3px solid black; padding-bottom: 12px; margin-bottom: 20px; overflow: hidden; }
         .header .logo { width: 100px; height: 100px; float: left; margin-right: 10px; object-fit: contain; }
-        .header-text { font-size: 12pt; font-weight: bold; line-height: 1.2; text-align: center; margin: 0; }
-        .header-info { font-size: 11pt; line-height: 1.1; text-align: center; margin: 5px 0 0 0; }
-        .title { font-size: 10pt; font-weight: bold; text-align: center; margin: 8px 0; }
+        .header-text { font-size: 11.5pt; font-weight: bold; line-height: 1.2; text-align: center; margin: 0; }
+        .header-info { font-size: 10.5pt; line-height: 1.1; text-align: center; margin: 5px 0 0 0; }
+        .title { font-size: 10.5pt; font-weight: bold; text-align: center; margin: 8px 0; }
         .document-number { text-align: center; margin-bottom: 6px; }
         .data-row { display: flex; margin-bottom: 6px; }
         .data-label { width: 150px; flex-shrink: 0; }
