@@ -11,7 +11,7 @@ import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pensio
 import { printFromElement } from "@/lib/print-helper";
 import { SPTJMTemplateGelar } from "@/components/pension/SPTJMTemplateGelar";
 import { SPTJMTemplatePensiun } from "@/components/pension/SPTJMTemplatePensiun";
-import { listLettersByType, saveLetterService } from "@/lib/letters-service";
+import { getLetterById, listLettersByType, saveLetterService } from "@/lib/letters-service";
 
 export default function GenerateSPTJM() {
   const url = new URL(window.location.href);
@@ -69,7 +69,17 @@ export default function GenerateSPTJM() {
         const type = sptjmType === 'gelar' ? 'pengantar_gelar' as const : 'pengantar_pensiun' as const
         const items = await listLettersByType(type)
         if (cancelled) return
-        setLetterOptions(items.map(l => ({ id: l.id, label: `${l.nomorSurat} — ${l.tanggalSurat}`, nomor: l.nomorSurat, tanggal: l.tanggalSurat, perihal: undefined })))
+        setLetterOptions(items.map(l => {
+          // Tampilkan tanggal seperti di dokumen: "23 September 2025"
+          const tanggalFormatted = l.tanggalSurat ? renderTanggal(l.tanggalSurat) : l.tanggalSurat
+          return { 
+            id: l.id, 
+            label: `${l.nomorSurat} — ${tanggalFormatted}`, 
+            nomor: l.nomorSurat, 
+            tanggal: l.tanggalSurat, 
+            perihal: undefined 
+          }
+        }))
       } catch {
         setLetterOptions([])
       }
@@ -78,7 +88,7 @@ export default function GenerateSPTJM() {
     return () => { cancelled = true }
   }, [sptjmType])
 
-  const handleSelectLetter = (id: string) => {
+  const handleSelectLetter = async (id: string) => {
     setSelectedLetterId(id)
     const found = letterOptions.find(o => o.id === id)
     if (found) {
@@ -86,6 +96,29 @@ export default function GenerateSPTJM() {
       // backend uses yyyy-mm-dd; keep as is for our renderer
       setTanggalSuratRujukanInput(found.tanggal)
       if (!perihalSuratRujukan) setPerihalSuratRujukan(sptjmType === 'gelar' ? 'Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS' : 'Usul Pensiun BUP, J/D /KPP')
+      
+      // Load pegawai data from selected letter for pensiun type
+      if (sptjmType === 'pensiun') {
+        try {
+          const letterDetail = await getLetterById(id)
+          const pegawaiData = (letterDetail as any)?.pegawaiData as any[] | undefined
+          if (pegawaiData && Array.isArray(pegawaiData)) {
+            // Convert pegawaiData to Personnel format
+            const pegawaiList: Personnel[] = pegawaiData.map((p: any, idx: number) => ({
+              id: String(p.id ?? p.nip ?? idx),
+              name: p.name || p.nama || '',
+              nip: p.nip || '',
+              position: p.position || p.posisi || p.jabatan || '',
+              unit: p.unit || p.unit_kerja || '',
+              golongan: p.golongan || p.gol || ''
+            }))
+            setAtasNama(pegawaiList)
+          }
+        } catch (error) {
+          console.error('Failed to load letter details:', error)
+          // Keep existing atasNama if loading fails
+        }
+      }
     }
   }
 

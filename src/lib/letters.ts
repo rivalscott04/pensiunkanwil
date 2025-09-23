@@ -13,6 +13,29 @@ export type StoredLetter = {
   signatureDateInput: string // yyyy-mm-dd
   signatureMode: "manual" | "tte"
   signatureAnchor: "^" | "$" | "#"
+  // Optional fields for special templates (SPTJM, meninggal, dll)
+  type?: string
+  perihal?: string
+  addresseeJabatan?: string
+  addresseeKota?: string
+  tanggalMeninggal?: string
+  dasarSurat?: string
+  // Data pegawai (untuk pengantar pensiun) yang akan diambil untuk SPTJM pensiun
+  pegawaiData?: Array<{
+    name?: string
+    nip?: string
+    position?: string
+    unit?: string
+    golongan?: string
+    [key: string]: any
+  }>
+  // Rujukan surat untuk SPTJM
+  nomorSuratRujukan?: string
+  tanggalSuratRujukan?: string
+  perihalSuratRujukan?: string
+  // Tambahan metadata jabatan/golongan
+  golonganPenandatangan?: string
+  golonganPegawai?: string
 }
 
 const STORAGE_KEY = "pensiun_flow_letters_v1"
