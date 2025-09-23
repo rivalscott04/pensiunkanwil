@@ -6,7 +6,7 @@ import { AppText } from "@/components/ui/app-typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { DocumentSection } from "@/components/pension/document-section"
 import { cn } from "@/lib/utils"
-import { apiUploadFile, FileUploadResponse } from "@/lib/api"
+import { apiUploadFile, apiGetPensionApplicationFiles, apiDeleteFile, FileUploadResponse } from "@/lib/api"
 
 interface FileUploadSlot {
   id: string
@@ -78,6 +78,7 @@ export function FileUploadGrid({
   const [files, setFiles] = useState<File[]>(uploadedFiles)
   const [dragActive, setDragActive] = useState(false)
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set())
+  const [errors, setErrors] = useState<Record<number, string>>({})
 
   // Sync with external uploadedFiles prop
   React.useEffect(() => {
@@ -91,18 +92,27 @@ export function FileUploadGrid({
   }))
 
   const handleFileSelect = async (slotIndex: number, file: File) => {
-    // Validate file size (300KB = 300 * 1024 bytes)
-    const maxSize = 300 * 1024
-    if (file.size > maxSize) {
-      alert(`File terlalu besar! Maksimal 300KB. File Anda: ${formatFileSize(file.size)}`)
+    // Validate file size with special case for SKP
+    const label = documentLabels[slotIndex] || ''
+    const isSkp = /skp/i.test(label)
+    const maxSizeBytes = isSkp ? 1.5 * 1024 * 1024 : 350 * 1024
+    if (file.size > maxSizeBytes) {
+      const maxLabel = isSkp ? '1.5MB (SKP)' : '350KB'
+      setErrors(prev => ({ ...prev, [slotIndex]: `File terlalu besar. Maksimal ${maxLabel} (file: ${formatFileSize(file.size)})` }))
       return
     }
 
     // Validate file type
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      alert('Tipe file tidak didukung! Hanya PDF, JPG, PNG yang diperbolehkan.')
+      setErrors(prev => ({ ...prev, [slotIndex]: 'Tipe file tidak didukung. Hanya PDF, JPG, PNG.' }))
       return
     }
+    // clear previous error
+    setErrors(prev => {
+      const next = { ...prev }
+      delete next[slotIndex]
+      return next
+    })
 
     const newFiles = [...files]
     newFiles[slotIndex] = file
@@ -116,10 +126,21 @@ export function FileUploadGrid({
       
       try {
         const jenisDokumen = mapDocumentLabelToJenisDokumen(documentLabels[slotIndex])
+        // If replacing existing document of same jenis, delete it first to avoid duplicates
+        try {
+          const existing = await apiGetPensionApplicationFiles(pengajuanId)
+          const match = existing.find(f => f.jenis_dokumen === jenisDokumen)
+          if (match) {
+            await apiDeleteFile(String(match.id))
+          }
+        } catch (_) {
+          // best-effort; proceed with upload even if cleanup fails
+        }
         const uploadedFile = await apiUploadFile(pengajuanId, file, jenisDokumen, true)
         onUploadSuccess?.(uploadedFile)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Upload failed'
+        setErrors(prev => ({ ...prev, [slotIndex]: errorMessage }))
         onUploadError?.(errorMessage)
         // Remove file from local state if upload failed
         const updatedFiles = [...files]
@@ -136,12 +157,36 @@ export function FileUploadGrid({
     }
   }
 
-  const handleFileRemove = (slotIndex: number) => {
+  const handleFileRemove = async (slotIndex: number) => {
+    const currentLabel = documentLabels[slotIndex]
+
+    // Optimistic UI update
     const newFiles = [...files]
     newFiles[slotIndex] = undefined as any
     const filteredFiles = newFiles.filter(Boolean)
     setFiles(filteredFiles)
     onFilesChange?.(filteredFiles)
+    setErrors(prev => {
+      const next = { ...prev }
+      delete next[slotIndex]
+      return next
+    })
+
+    // Attempt backend deletion when possible
+    try {
+      if (pengajuanId && currentLabel) {
+        const jenisDokumen = mapDocumentLabelToJenisDokumen(currentLabel)
+        const existing = await apiGetPensionApplicationFiles(pengajuanId)
+        const match = existing.find(f => f.jenis_dokumen === jenisDokumen)
+        if (match) {
+          await apiDeleteFile(String(match.id))
+        }
+      }
+    } catch (error) {
+      // Surface inline error on this slot (use a stable key)
+      const message = error instanceof Error ? error.message : 'Gagal menghapus file di server'
+      setErrors(prev => ({ ...prev, [slotIndex]: message }))
+    }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -247,7 +292,7 @@ export function FileUploadGrid({
             ? "border-success shadow-card"
             : dragActive
             ? "border-orange shadow-button"
-            : "border-dashed border-muted-foreground/30 hover:border-orange/50 hover:shadow-card"
+            : cn("border-dashed border-muted-foreground/30 hover:border-orange/50 hover:shadow-card", errors[slotIndex] && "border-destructive")
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -325,6 +370,9 @@ export function FileUploadGrid({
                   <Eye className="w-3 h-3" />
                 </AppButton>
               </div>
+              {errors[slotIndex] ? (
+                <div className="text-xs text-destructive mt-1">{errors[slotIndex]}</div>
+              ) : null}
             </div>
           ) : (
             <div 
@@ -347,6 +395,9 @@ export function FileUploadGrid({
                 <AppText size="xs" color="muted" className="font-medium">
                   Klik atau seret file ke sini
                 </AppText>
+                {errors[slotIndex] ? (
+                  <div className="text-xs text-destructive mt-2">{errors[slotIndex]}</div>
+                ) : null}
               </div>
             </div>
           )}
@@ -362,7 +413,7 @@ export function FileUploadGrid({
           Unggah dokumen yang diperlukan. Total dokumen: {maxFiles}
         </AppText>
         <AppText size="sm" color="muted">
-          Format yang didukung: PDF, JPG, PNG (Maks. 300KB per file)
+          Format: PDF, JPG, PNG • Maks. 350KB (SKP maks. 1.5MB)
         </AppText>
       </div>
 

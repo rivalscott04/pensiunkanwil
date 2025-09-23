@@ -267,7 +267,9 @@ export async function apiUploadFile(
   formData.append('pengajuan_id', pengajuanId)
   formData.append('file', file)
   formData.append('jenis_dokumen', jenisDokumen)
-  formData.append('is_required', isRequired.toString())
+  // Laravel boolean validator can be picky about string "true/false".
+  // Send as numeric string to be unambiguous: 1 for true, 0 for false.
+  formData.append('is_required', isRequired ? '1' : '0')
   if (keterangan) formData.append('keterangan', keterangan)
 
   const res = await fetch(`${API_BASE_URL}/api/files/upload`, {

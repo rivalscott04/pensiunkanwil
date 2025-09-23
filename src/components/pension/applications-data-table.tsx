@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { SkeletonDataTable } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { motion } from "framer-motion"
@@ -46,6 +46,17 @@ export function ApplicationsDataTable({
   const [isLoading, setIsLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const { toast } = useToast()
+  const [visibleColumns, setVisibleColumns] = useState({
+    tanggal: true,
+    nama: true,
+    nip: true,
+    jenis: true,
+    status: true,
+    update: true,
+    aksi: true,
+  })
+  const COLUMN_STORAGE_KEY = 'applications-table:visibleColumns'
+  const EXPIRY_MINUTES = 60
   // Removed modal state as we now navigate to detail page
 
   const loadApplications = async () => {
@@ -91,6 +102,40 @@ export function ApplicationsDataTable({
     loadApplications()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, statusFilter])
+
+  // Load saved column visibility (with expiry)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLUMN_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      const savedAt = typeof parsed?.savedAt === 'number' ? parsed.savedAt : 0
+      const now = Date.now()
+      const expired = now - savedAt > EXPIRY_MINUTES * 60 * 1000
+      if (expired) {
+        localStorage.removeItem(COLUMN_STORAGE_KEY)
+        return
+      }
+      if (parsed?.value && typeof parsed.value === 'object') {
+        setVisibleColumns((prev) => ({ ...prev, ...parsed.value }))
+      }
+    } catch (_) {
+      // ignore corrupted storage
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Save column visibility on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        COLUMN_STORAGE_KEY,
+        JSON.stringify({ value: visibleColumns, savedAt: Date.now() })
+      )
+    } catch (_) {
+      // ignore storage write errors
+    }
+  }, [visibleColumns])
 
   // Filter applications based on search and filters
   const filteredApplications = applications.filter(app => {
@@ -166,12 +211,12 @@ export function ApplicationsDataTable({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <CardTitle>Daftar Pengajuan Pensiun</CardTitle>
+          <CardTitle className="text-xl md:text-2xl">Daftar Pengajuan Pensiun</CardTitle>
         </motion.div>
         
         {/* Filters */}
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4"
+          className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -221,72 +266,153 @@ export function ApplicationsDataTable({
               Menampilkan {filteredApplications.length} dari {applications.length} pengajuan
             </AppText>
           </motion.div>
+
+          <motion.div
+            className="flex md:justify-end"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.55 }}
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="justify-between">
+                  Kolom
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Tampilkan Kolom</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.tanggal}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, tanggal: Boolean(v) }))}
+                >
+                  Tanggal Pengajuan
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.nama}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, nama: Boolean(v) }))}
+                >
+                  Nama Pegawai
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.nip}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, nip: Boolean(v) }))}
+                >
+                  NIP
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.jenis}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, jenis: Boolean(v) }))}
+                >
+                  Jenis Pensiun
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.status}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, status: Boolean(v) }))}
+                >
+                  Status
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.update}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, update: Boolean(v) }))}
+                >
+                  Tanggal Update
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.aksi}
+                  onCheckedChange={(v) => setVisibleColumns((prev) => ({ ...prev, aksi: Boolean(v) }))}
+                >
+                  Aksi
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </motion.div>
         </motion.div>
       </CardHeader>
       
       <CardContent>
         <motion.div 
-          className="rounded-md border"
+          className="rounded-md border overflow-x-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.6 }}
         >
-          <Table>
+          <Table className="min-w-[1100px] text-[15px]">
             <TableHeader>
               <motion.tr
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.7 }}
               >
+                {visibleColumns.tanggal && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.8 }}
                 >
                   Tanggal Pengajuan
                 </motion.th>
+                )}
+                {visibleColumns.nama && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.85 }}
                 >
                   Nama Pegawai
                 </motion.th>
+                )}
+                {visibleColumns.nip && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.9 }}
                 >
                   NIP
                 </motion.th>
+                )}
+                {visibleColumns.jenis && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.95 }}
                 >
                   Jenis Pensiun
                 </motion.th>
+                )}
+                {visibleColumns.status && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 1.0 }}
                 >
                   Status
                 </motion.th>
+                )}
+                {visibleColumns.update && (
                 <motion.th
+                  className="text-left py-4 px-4 text-sm md:text-base"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 1.05 }}
                 >
                   Tanggal Update
                 </motion.th>
+                )}
+                {visibleColumns.aksi && (
                 <motion.th 
-                  className="w-[50px]"
+                  className="w-[80px]"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 1.1 }}
                 >
                 </motion.th>
+                )}
               </motion.tr>
             </TableHeader>
             <TableBody>
@@ -298,7 +424,7 @@ export function ApplicationsDataTable({
                 >
                   <motion.td 
                     colSpan={7} 
-                    className="text-center py-8"
+                    className="text-center py-10 text-base"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3, delay: 1.0 }}
@@ -320,61 +446,80 @@ export function ApplicationsDataTable({
                     }`}
                     onClick={() => handleRowClick(application)}
                   >
-                    <motion.td
+                    {visibleColumns.tanggal && (
+                    <motion.td 
+                      className="py-4 px-4 text-[15px]"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       {formatDate(application.tanggalPengajuan)}
                     </motion.td>
+                    )}
+                    {visibleColumns.nama && (
                     <motion.td
+                      className="py-4 px-4 text-[15px]"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       <div className="space-y-1">
-                        <div className="font-medium">{application.namaPegawai}</div>
+                        <div className="font-medium text-base">{application.namaPegawai}</div>
                       </div>
                     </motion.td>
+                    )}
+                    {visibleColumns.nip && (
                     <motion.td 
-                      className="font-mono text-sm"
+                      className="font-mono text-[15px] py-4 px-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       {application.nip}
                     </motion.td>
+                    )}
+                    {visibleColumns.jenis && (
                     <motion.td
+                      className="py-4 px-4 text-[15px]"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       {application.jenisPensiun}
                     </motion.td>
+                    )}
+                    {visibleColumns.status && (
                     <motion.td 
                       onClick={(e) => e.stopPropagation()}
+                      className="py-4 px-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       {getStatusBadge(application.status, () => handleStatusClick(application))}
                     </motion.td>
+                    )}
+                    {visibleColumns.update && (
                     <motion.td
+                      className="py-4 px-4 text-[15px]"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       {formatDate(application.tanggalUpdate)}
                     </motion.td>
+                    )}
+                    {visibleColumns.aksi && (
                     <motion.td 
                       onClick={(e) => e.stopPropagation()}
+                      className="py-4 px-2"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 1.3 + (index * 0.05) }}
                     >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 transition-all duration-200 hover:scale-110">
+                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 transition-all duration-200 hover:scale-110">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -411,6 +556,7 @@ export function ApplicationsDataTable({
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </motion.td>
+                    )}
                   </motion.tr>
                 ))
               )}

@@ -171,18 +171,11 @@ export default function DocumentUpload() {
 
   const handleUploadSuccess = (uploadedFile: FileUploadResponse) => {
     setUploadedFileResponses(prev => [...prev, uploadedFile])
-    toast({
-      title: "Upload Berhasil",
-      description: `File ${uploadedFile.nama_asli} berhasil diupload`,
-    })
+    // Silent success; inline UI already shows success state per slot
   }
 
   const handleUploadError = (error: string) => {
-    toast({
-      title: "Upload Gagal",
-      description: error,
-      variant: "destructive"
-    })
+    // Error will be shown inline on the specific slot; keep page quiet
   }
 
   const handleSubmit = async () => {
@@ -302,7 +295,7 @@ export default function DocumentUpload() {
                 {progressPercentage}% selesai
               </AppText>
               <AppText size="sm" color="muted">
-                Maksimal 300KB per file
+                Maksimal 350KB per file (SKP hingga 1.5MB)
               </AppText>
             </div>
           </div>

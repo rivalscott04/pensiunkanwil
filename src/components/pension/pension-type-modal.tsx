@@ -40,12 +40,12 @@ const pensionTypes: PensionType[] = [
   },
   {
     id: "aps",
-    name: "Alih Tugas Pegawai Swasta (APS)",
-    description: "Pensiun untuk beralih ke sektor swasta",
+    name: "Atas Permintaan Sendiri (APS)",
+    description: "Pensiun atas permintaan sendiri pegawai",
     icon: FileText,
     additionalDocs: [
-      "Surat Usul Pemberhentian dari PPK",
-      "Surat Permohonan menjadi PPS"
+      "Surat Pernyataan Pensiun Atas Permintaan Sendiri",
+      "Surat Usul Pemberhentian dari PPK"
     ]
   }
 ]
