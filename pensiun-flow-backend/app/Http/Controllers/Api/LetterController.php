@@ -48,7 +48,6 @@ class LetterController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateData($request);
-        $data['id'] = (string) Str::uuid();
         $letter = Letter::create($data);
         return response()->json($letter, 201);
     }
