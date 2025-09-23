@@ -199,6 +199,13 @@ export function ApplicationsDataTable({
     window.location.href = `/pengajuan/detail/${application.id}`
   }
 
+  const handleEditApplication = async (application: Application) => {
+    setActionLoading(application.id)
+    await new Promise(resolve => setTimeout(resolve, 300))
+    setActionLoading(null)
+    window.location.href = `/pengajuan/upload?applicationId=${application.id}`
+  }
+
   if (isLoading) {
     return <SkeletonDataTable />
   }
@@ -542,7 +549,7 @@ export function ApplicationsDataTable({
                              )}
                            </DropdownMenuItem>
                           {application.status === 'draft' && (
-                            <DropdownMenuItem className="transition-all duration-200 hover:bg-accent/50">
+                            <DropdownMenuItem className="transition-all duration-200 hover:bg-accent/50" onClick={() => handleEditApplication(application)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
