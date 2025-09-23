@@ -75,6 +75,7 @@ export default function DetailPengajuan() {
   
   // Fetch application by ID
   const [application, setApplication] = useState<Application | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [documentCompliance, setDocumentCompliance] = useState<Record<string, boolean>>(
     {}
   )
@@ -84,6 +85,7 @@ export default function DetailPengajuan() {
   useEffect(() => {
     const load = async () => {
       if (!id) return
+      setIsLoading(true)
       try {
         const res = await fetch(`${API_BASE_URL || ''}/api/pengajuan/${id}`, { 
           credentials: 'include',
@@ -133,6 +135,8 @@ export default function DetailPengajuan() {
           variant: "destructive"
         })
         navigate('/pengajuan')
+      } finally {
+        setIsLoading(false)
       }
     }
     load()
@@ -226,10 +230,29 @@ export default function DetailPengajuan() {
   }
 
   const handleRejectApplication = async () => {
-    if (!rejectionNotes.trim()) {
+    // Input validation for rejection notes
+    if (!rejectionNotes || !rejectionNotes.trim()) {
       toast({
         title: "Catatan Diperlukan",
         description: "Harap masukkan catatan penolakan",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (rejectionNotes.trim().length < 10) {
+      toast({
+        title: "Catatan Terlalu Pendek",
+        description: "Catatan penolakan minimal 10 karakter",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (rejectionNotes.trim().length > 500) {
+      toast({
+        title: "Catatan Terlalu Panjang",
+        description: "Catatan penolakan maksimal 500 karakter",
         variant: "destructive"
       })
       return
@@ -278,6 +301,72 @@ export default function DetailPengajuan() {
       title: "Print Document",
       description: "Membuka dialog print"
     })
+  }
+
+  // Show loading state while fetching data
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/pengajuan')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Kembali ke Pengajuan
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span className="ml-2">Memuat detail pengajuan...</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Show error state if application is null
+  if (!application) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-4 mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/pengajuan')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Kembali ke Pengajuan
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center text-center">
+                <div>
+                  <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Data tidak ditemukan</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Detail pengajuan pensiun tidak dapat dimuat. Silakan coba lagi.
+                  </p>
+                  <Button onClick={() => navigate('/pengajuan')}>
+                    Kembali ke Daftar Pengajuan
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (
@@ -520,10 +609,23 @@ export default function DetailPengajuan() {
                             value={rejectionNotes}
                             onChange={(e) => setRejectionNotes(e.target.value)}
                             className="min-h-[100px]"
+                            maxLength={500}
                           />
+                          <div className="flex justify-between items-center text-xs text-muted-foreground">
+                            <span>
+                              {rejectionNotes.trim().length < 10 && rejectionNotes.trim().length > 0 && (
+                                <span className="text-amber-600">
+                                  Minimal 10 karakter ({rejectionNotes.trim().length}/10)
+                                </span>
+                              )}
+                            </span>
+                            <span className={rejectionNotes.length > 450 ? "text-red-500" : ""}>
+                              {rejectionNotes.length}/500
+                            </span>
+                          </div>
                           <Button 
                             onClick={handleRejectApplication}
-                            disabled={isSubmittingDecision || !rejectionNotes.trim()}
+                            disabled={isSubmittingDecision || !rejectionNotes.trim() || rejectionNotes.trim().length < 10}
                             variant="destructive"
                           >
                             {isSubmittingDecision ? "Memproses..." : "TOLAK PENGAJUAN"}
