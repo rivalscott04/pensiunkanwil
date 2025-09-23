@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { LettersDataTable } from "@/components/pension/letters-data-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { KemenagDocumentTemplate } from "@/components/pension/KemenagDocumentTemplate"
-import { listLetters } from "@/lib/letters-service"
+import { listLetters, deleteLetterService } from "@/lib/letters-service"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -116,21 +116,50 @@ export default function SuratIndex() {
   const [letters, setLetters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
 
-  // Load letters from database
+  // Load letters + lightweight polling and refetch on focus/visibility
   React.useEffect(() => {
+    let cancelled = false
+
     const loadLetters = async () => {
       try {
-        setLoading(true)
+        if (!cancelled) setLoading(true)
         const data = await listLetters()
-        setLetters(data)
+        if (!cancelled) setLetters(data)
       } catch (error) {
-        console.error('Failed to load letters:', error)
-        setLetters([])
+        if (!cancelled) {
+          console.error('Failed to load letters:', error)
+          setLetters([])
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
+
+    const refresh = async () => {
+      try {
+        const data = await listLetters()
+        if (!cancelled) setLetters(data)
+      } catch {}
+    }
+
+    // initial load
     loadLetters()
+
+    // poll every 12s
+    const intervalId: any = setInterval(refresh, 12000)
+
+    // refetch when window regains focus or tab becomes visible
+    const onFocus = () => { refresh() }
+    const onVisibility = () => { if (document.visibilityState === 'visible') refresh() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      cancelled = true
+      clearInterval(intervalId)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   const letter = React.useMemo(() => letters.find(l => l.id === (printLetterId || viewLetterId)) || null, [letters, printLetterId, viewLetterId])
@@ -373,6 +402,11 @@ export default function SuratIndex() {
           onView={(item) => { setViewLetterId(item.id); setViewOpen(true) }}
           onEdit={(item) => {
             window.location.href = `/generate-surat/hukuman-disiplin?edit=${encodeURIComponent(item.id)}`
+          }}
+          onDelete={async (item) => {
+            if (!item?.id) return
+            await deleteLetterService(item.id)
+            setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
           onPrint={(item) => {
             // Directly print with the item data
