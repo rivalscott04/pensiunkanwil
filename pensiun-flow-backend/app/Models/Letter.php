@@ -24,6 +24,8 @@ class Letter extends Model
         'nama_penandatangan',
         'nip_penandatangan',
         'jabatan_penandatangan',
+        'golongan_penandatangan',
+        'golongan_pegawai',
         'signature_place',
         'signature_date_input',
         'signature_mode',

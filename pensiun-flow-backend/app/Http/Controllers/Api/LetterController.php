@@ -82,6 +82,8 @@ class LetterController extends Controller
             'nama_penandatangan' => [ 'required', 'string' ],
             'nip_penandatangan' => [ 'nullable', 'string' ],
             'jabatan_penandatangan' => [ 'nullable', 'string' ],
+            'golongan_penandatangan' => [ 'nullable', 'string' ],
+            'golongan_pegawai' => [ 'nullable', 'string' ],
             'signature_place' => [ 'nullable', 'string' ],
             'signature_date_input' => [ 'required', 'date' ],
             'signature_mode' => [ 'required', 'in:manual,tte' ],
