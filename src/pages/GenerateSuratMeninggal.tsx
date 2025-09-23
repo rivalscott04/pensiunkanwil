@@ -128,29 +128,73 @@ export default function GenerateSuratMeninggal() {
 
   const handlePrint = () => {
     const printContents = document.getElementById("surat-print-area")?.innerHTML || "";
-    const frame = document.createElement("iframe");
-    frame.style.position = "fixed";
-    frame.style.right = "0";
-    frame.style.bottom = "0";
-    frame.style.width = "0";
-    frame.style.height = "0";
-    frame.style.border = "0";
-    document.body.appendChild(frame);
-    const win = frame.contentWindow;
-    const doc = win?.document;
-    if (doc) {
-      doc.open();
-      const base = `${window.location.origin}`;
-      doc.write(`<!DOCTYPE html><html><head><title>Print</title><base href="${base}"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css"></head><body>${printContents}</body></html>`);
-      doc.close();
-      const waitForImages = async () => {
-        const images = Array.from(doc.images || []);
-        await Promise.all(images.map((img) => img.complete && img.naturalWidth > 0 ? Promise.resolve() : new Promise<void>((resolve) => { img.onload = () => resolve(); img.onerror = () => resolve(); })));
-      };
-      waitForImages().then(() => { win?.focus(); win?.print(); setTimeout(() => document.body.removeChild(frame), 1000); });
-    } else {
-      setTimeout(() => document.body.removeChild(frame), 1000);
+    const base = `${window.location.origin}`;
+    
+    // Create a new window/tab for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      alert('Popup blocked! Please allow popups for this site to print documents.');
+      return;
     }
+    
+    const printDocument = printWindow.document;
+    printDocument.open();
+    printDocument.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Surat Meninggal - Print</title>
+          <base href="${base}">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
+          <style>
+            @page {
+              size: A4;
+              margin: 2cm;
+            }
+            body {
+              font-family: 'Times New Roman', serif;
+              font-size: 12pt;
+              line-height: 1.6;
+              color: #000;
+            }
+            .print-content {
+              max-width: 100%;
+              margin: 0 auto;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-content">
+            ${printContents}
+          </div>
+        </body>
+      </html>
+    `);
+    printDocument.close();
+    
+    // Wait for images to load then print
+    const waitForImages = async () => {
+      const images = Array.from(printDocument.images || []);
+      await Promise.all(images.map((img) => 
+        img.complete && img.naturalWidth > 0 
+          ? Promise.resolve() 
+          : new Promise<void>((resolve) => { 
+              img.onload = () => resolve(); 
+              img.onerror = () => resolve(); 
+            })
+      ));
+    };
+    
+    waitForImages().then(() => {
+      printWindow.focus();
+      printWindow.print();
+      // Close the window after printing (optional)
+      // printWindow.close();
+    });
   };
 
   const templateProps = {
