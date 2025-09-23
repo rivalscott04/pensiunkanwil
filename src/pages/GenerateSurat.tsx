@@ -147,7 +147,7 @@ export default function CreateSurat() {
               <p>Yang bertanda tangan dibawah ini :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${pejabat?.name || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(pejabat?.nip || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pejabat?.rank || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pejabat?.golongan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${pejabat?.position || ""}</div></div>
             </div>
 
@@ -155,7 +155,7 @@ export default function CreateSurat() {
               <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${pegawai?.name || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(pegawai?.nip || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pegawai?.rank || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pegawai?.golongan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${pegawai?.position || ""}</div></div>
               <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${pegawai?.unit || ""}</div></div>
             </div>
@@ -208,7 +208,7 @@ export default function CreateSurat() {
               <p>Yang bertanda tangan dibawah ini</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${pejabat?.name || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(pejabat?.nip || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pejabat?.rank || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pejabat?.golongan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${pejabat?.position || ""}</div></div>
             </div>
 
@@ -216,7 +216,7 @@ export default function CreateSurat() {
               <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${pegawai?.name || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(pegawai?.nip || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pegawai?.rank || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${pegawai?.golongan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${pegawai?.position || ""}</div></div>
               <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${pegawai?.unit || ""}</div></div>
             </div>
@@ -332,7 +332,8 @@ export default function CreateSurat() {
                 id: stored.id || "",
                 name: stored.namaPenandatangan,
                 nip: stored.nipPenandatangan || "",
-                position: stored.jabatanPenandatangan || ""
+                position: stored.jabatanPenandatangan || "",
+                golongan: (stored as any).golonganPenandatangan || ""
               });
             }
             if (stored.namaPegawai) {
@@ -341,7 +342,8 @@ export default function CreateSurat() {
                 name: stored.namaPegawai,
                 nip: stored.nipPegawai || "",
                 position: stored.posisiPegawai || "",
-                unit: stored.unitPegawai || ""
+                unit: stored.unitPegawai || "",
+                golongan: (stored as any).golonganPegawai || ""
               });
             }
           }
@@ -444,7 +446,12 @@ export default function CreateSurat() {
       signatureMode,
       signatureAnchor,
     };
-    const payload = { ...(letter as any), type: 'hukuman_disiplin' } as any;
+    const payload = { 
+      ...(letter as any), 
+      type: 'hukuman_disiplin',
+      golonganPenandatangan: pejabat?.golongan,
+      golonganPegawai: pegawai?.golongan
+    } as any;
     try {
       setSaving(true)
       // Save directly to database

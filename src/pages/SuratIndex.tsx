@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { GraduationCap, Briefcase, FileSignature, FileText, Search } from "lucide-react"
+import { GraduationCap, Briefcase, FileSignature, FileText, Search, Copy, Check } from "lucide-react"
 
 export default function SuratIndex() {
   const [pickerOpen, setPickerOpen] = React.useState(false)
@@ -110,6 +110,7 @@ export default function SuratIndex() {
   const [printLetterId, setPrintLetterId] = React.useState<string | null>(null)
   const [viewOpen, setViewOpen] = React.useState(false)
   const [viewLetterId, setViewLetterId] = React.useState<string | null>(null)
+  const [copiedField, setCopiedField] = React.useState<string | null>(null)
 
   const [letters, setLetters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -131,7 +132,7 @@ export default function SuratIndex() {
     loadLetters()
   }, [])
 
-  const letter = React.useMemo(() => letters.find(l => l.id === printLetterId) || null, [letters, printLetterId])
+  const letter = React.useMemo(() => letters.find(l => l.id === (printLetterId || viewLetterId)) || null, [letters, printLetterId, viewLetterId])
 
   const documentNumberPage = letter?.nomorSurat || ""
   const signatureDate = React.useMemo(() => {
@@ -229,7 +230,7 @@ export default function SuratIndex() {
               <p>Yang bertanda tangan dibawah ini :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPenandatangan || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.golonganPenandatangan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
             </div>
 
@@ -237,7 +238,7 @@ export default function SuratIndex() {
               <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPegawai || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.golonganPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${item.unitPegawai || ""}</div></div>
             </div>
@@ -290,7 +291,7 @@ export default function SuratIndex() {
               <p>Yang bertanda tangan dibawah ini</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPenandatangan || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.golonganPenandatangan || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
             </div>
 
@@ -298,7 +299,7 @@ export default function SuratIndex() {
               <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
               <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPegawai || "").replace(/\D+/g, "")}</div></div>
-              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.golonganPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
               <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${item.unitPegawai || ""}</div></div>
             </div>
@@ -401,6 +402,33 @@ export default function SuratIndex() {
     handlePrintWithItem(letter)
   }
 
+  const handleCopy = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
+    }
+  }
+
+  const CopyableField = ({ text, field, className = "" }: { text: string, field: string, className?: string }) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <span className="font-mono text-sm">{text}</span>
+      <button
+        onClick={() => handleCopy(text, field)}
+        className="p-1 hover:bg-gray-100 rounded transition-colors"
+        title="Copy to clipboard"
+      >
+        {copiedField === field ? (
+          <Check className="h-3 w-3 text-green-600" />
+        ) : (
+          <Copy className="h-3 w-3 text-gray-500" />
+        )}
+      </button>
+    </div>
+  )
+
   return (
     <AppLayout>
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
@@ -458,7 +486,7 @@ export default function SuratIndex() {
         </Dialog>
 
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-          <DialogContent className="sm:max-w-[520px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detail Surat</DialogTitle>
             </DialogHeader>
@@ -468,7 +496,9 @@ export default function SuratIndex() {
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">No Surat</TableCell>
-                      <TableCell className="font-mono text-sm">{letter.nomorSurat}</TableCell>
+                      <TableCell>
+                        <CopyableField text={letter.nomorSurat} field={`nomor-${letter.id}`} />
+                      </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Tanggal Surat</TableCell>
@@ -480,7 +510,21 @@ export default function SuratIndex() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">NIP Pegawai</TableCell>
-                      <TableCell className="font-mono text-sm">{letter.nipPegawai}</TableCell>
+                      <TableCell>
+                        <CopyableField text={letter.nipPegawai || ""} field={`nip-pegawai-${letter.id}`} />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Pangkat/Golongan Pegawai</TableCell>
+                      <TableCell>{(letter as any).golonganPegawai || "-"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Jabatan Pegawai</TableCell>
+                      <TableCell>{letter.posisiPegawai || "-"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Unit Kerja</TableCell>
+                      <TableCell>{letter.unitPegawai || "-"}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Penandatangan</TableCell>
@@ -488,7 +532,25 @@ export default function SuratIndex() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">NIP Penandatangan</TableCell>
-                      <TableCell className="font-mono text-sm">{letter.nipPenandatangan}</TableCell>
+                      <TableCell>
+                        <CopyableField text={letter.nipPenandatangan || ""} field={`nip-penandatangan-${letter.id}`} />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Pangkat/Golongan Penandatangan</TableCell>
+                      <TableCell>{(letter as any).golonganPenandatangan || "-"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Jabatan Penandatangan</TableCell>
+                      <TableCell>{letter.jabatanPenandatangan || "-"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Tempat Tanda Tangan</TableCell>
+                      <TableCell>{letter.signaturePlace || "-"}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Jenis Tanda Tangan</TableCell>
+                      <TableCell className="capitalize">{letter.signatureMode || "-"}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

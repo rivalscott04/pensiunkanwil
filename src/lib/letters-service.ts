@@ -58,6 +58,10 @@ function fromApi(api: any): StoredLetter {
     tanggalSuratRujukan: api.tanggal_surat_rujukan,
     // @ts-ignore extend
     perihalSuratRujukan: api.perihal_surat_rujukan,
+    // @ts-ignore extend
+    golonganPenandatangan: api.golongan_penandatangan,
+    // @ts-ignore extend
+    golonganPegawai: api.golongan_pegawai,
   }
 }
 
@@ -90,6 +94,8 @@ function toApi(ui: StoredLetter): any {
     nomor_surat_rujukan: (ui as any).nomorSuratRujukan ?? null,
     tanggal_surat_rujukan: (ui as any).tanggalSuratRujukan ?? null,
     perihal_surat_rujukan: (ui as any).perihalSuratRujukan ?? null,
+    golongan_penandatangan: (ui as any).golonganPenandatangan ?? null,
+    golongan_pegawai: (ui as any).golonganPegawai ?? null,
   }
 }
 

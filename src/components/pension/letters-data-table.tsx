@@ -73,6 +73,18 @@ export function LettersDataTable({ data, loading, items, onCreateNew, onView, on
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })
 
+  const formatLetterType = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'hukuman_disiplin': 'Hukuman Disiplin',
+      'pengantar_pensiun': 'Pengantar Pensiun',
+      'pengantar_gelar': 'Pengantar Penyematan Gelar',
+      'sptjm_gelar': 'Surat Pertanggung Jawaban Mutlak Penyematan Gelar',
+      'sptjm_pensiun': 'Surat Pertanggung Jawaban Mutlak Pensiun',
+      'surat_meninggal': 'Surat Keterangan Meninggal'
+    }
+    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+
   const handleDeleteClick = (item: LetterItem) => {
     setTarget(item)
     setConfirmOpen(true)
@@ -232,7 +244,7 @@ export function LettersDataTable({ data, loading, items, onCreateNew, onView, on
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Hapus Surat?"
-        description={`Anda yakin ingin menghapus surat ${target?.nomorSurat ?? ""}? Tindakan ini tidak dapat dibatalkan.`}
+        description={`Anda yakin ingin menghapus surat ${(target as any)?.type ? formatLetterType((target as any).type) : 'Hukuman Disiplin'} dengan nomor ${target?.nomorSurat ?? ""}? Tindakan ini tidak dapat dibatalkan.`}
         confirmText="Hapus"
         cancelText="Batal"
         variant="destructive"
