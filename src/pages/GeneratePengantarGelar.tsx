@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
+import { printFromElement } from "@/lib/print-helper";
 import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
 import { PengantarPenyematanGelarTemplate, PengantarPenyematanGelarRow } from "@/components/pension/PengantarPenyematanGelarTemplate";
 import { saveLetterService } from "@/lib/letters-service";
@@ -112,77 +113,7 @@ export default function GeneratePengantarGelar() {
   }, [pegawaiList, rowExtras]);
 
   const handlePrint = () => {
-    const printContents = document.getElementById("pengantar-gelar-print-area")?.innerHTML || "";
-    const base = `${window.location.origin}`;
-    
-    // Create a new window/tab for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-      alert('Popup blocked! Please allow popups for this site to print documents.');
-      return;
-    }
-    
-    const printDocument = printWindow.document;
-    printDocument.open();
-    printDocument.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Pengantar Gelar - Print</title>
-          <base href="${base}">
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css">
-          <style>
-            @page {
-              size: A4;
-              margin: 2cm;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              font-size: 10.5pt;
-              line-height: 1.6;
-              color: #000;
-            }
-            h1, h2, h3, h4, h5, h6 {
-              font-size: 11.5pt;
-            }
-            .print-content {
-              max-width: 100%;
-              margin: 0 auto;
-            }
-            @media print {
-              body { margin: 0; }
-              .no-print { display: none !important; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-content">
-            ${printContents}
-          </div>
-        </body>
-      </html>
-    `);
-    printDocument.close();
-    
-    // Wait for images to load then print
-    const waitForImages = async () => {
-      const images = Array.from(printDocument.images || []);
-      await Promise.all(images.map((img) => 
-        img.complete && img.naturalWidth > 0 
-          ? Promise.resolve() 
-          : new Promise<void>((resolve) => { 
-              img.onload = () => resolve(); 
-              img.onerror = () => resolve(); 
-            })
-      ));
-    };
-    
-    waitForImages().then(() => {
-      printWindow.focus();
-      printWindow.print();
-      // Close the window after printing (optional)
-      // printWindow.close();
-    });
+    printFromElement("pengantar-gelar-print-area", "Pengantar Gelar - Print");
   };
 
   const [printModalOpen, setPrintModalOpen] = React.useState<boolean>(false);
