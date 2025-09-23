@@ -13,7 +13,9 @@ import {
   apiSubmitPensionApplication,
   CreatePensionApplicationRequest,
   PensionApplication,
-  FileUploadResponse 
+  FileUploadResponse,
+  apiGetPensionApplication,
+  apiGetPensionApplicationFiles 
 } from "@/lib/api"
 import { apiUpdatePensionApplicationStatus } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
@@ -34,21 +36,36 @@ export default function DocumentUpload() {
   // Get data from navigation state
   const employee = location.state?.employee as Employee | null
   const pensionType = location.state?.pensionType as string | null
+  const searchParams = new URLSearchParams(location.search)
+  const applicationIdFromQuery = searchParams.get('applicationId')
 
   // Redirect back if no required data
   useEffect(() => {
+    // Allow page when editing existing application via query
     if (!employee || !pensionType) {
+      if (applicationIdFromQuery) return
       navigate('/pengajuan', { replace: true })
     }
-  }, [employee, pensionType, navigate])
+  }, [employee, pensionType, navigate, applicationIdFromQuery])
 
   // Create pension application when component mounts
   useEffect(() => {
-    const createApplication = async () => {
-      if (!employee || !pensionType || pengajuanId) return
-
+    const init = async () => {
       try {
-        // Map UI pension type ids to backend accepted enum values
+        // If editing existing application
+        if (applicationIdFromQuery && !pengajuanId) {
+          const app = await apiGetPensionApplication(applicationIdFromQuery)
+          setCreatedApplication(app)
+          setPengajuanId(String(app.id))
+          // Load existing uploaded files for progress
+          const files = await apiGetPensionApplicationFiles(String(app.id))
+          setUploadedFileResponses(files)
+          return
+        }
+
+        // Creating new application from selected employee & type
+        if (!employee || !pensionType || pengajuanId) return
+
         const toBackendJenis = (type: string): 'BUP' | 'APS' | 'Janda/Duda' | 'Sakit' => {
           switch (type) {
             case 'bup':
@@ -78,7 +95,7 @@ export default function DocumentUpload() {
         setCreatedApplication(createdApp)
         setPengajuanId(createdApp.id)
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Gagal membuat pengajuan"
+        const errorMessage = error instanceof Error ? error.message : "Gagal memuat/membuat pengajuan"
         toast({
           title: "Error",
           description: errorMessage,
@@ -88,8 +105,8 @@ export default function DocumentUpload() {
       }
     }
 
-    createApplication()
-  }, [employee, pensionType, pengajuanId, navigate, toast])
+    init()
+  }, [employee, pensionType, pengajuanId, navigate, toast, applicationIdFromQuery])
 
   // Helper function to map frontend pension type to backend format
   const mapPensionTypeToBackend = (type: string): 'normal' | 'dipercepat' | 'khusus' => {
@@ -251,10 +268,17 @@ export default function DocumentUpload() {
 
   if (!employee || !pensionType) return null
 
-  const requiredDocuments = getDocumentCount(pensionType)
-  const labels = getDocumentLabels(pensionType)
+  // Derive context when editing existing application
+  const effectivePensionType = pensionType || (createdApplication?.jenis_pensiun ?
+    (createdApplication.jenis_pensiun.toLowerCase() === 'bup' ? 'bup'
+    : createdApplication.jenis_pensiun.toLowerCase() === 'aps' ? 'aps'
+    : createdApplication.jenis_pensiun.toLowerCase() === 'janda/duda' ? 'janda_duda'
+    : 'sakit') : null)
+  const requiredDocuments = getDocumentCount(effectivePensionType)
+  const labels = getDocumentLabels(effectivePensionType)
   const maxFiles = labels.length
-  const progressPercentage = Math.round((uploadedFiles.length / requiredDocuments) * 100)
+  const uploadedCount = uploadedFileResponses.length
+  const progressPercentage = Math.round((uploadedCount / requiredDocuments) * 100)
 
   return (
     <AppLayout>
@@ -270,7 +294,7 @@ export default function DocumentUpload() {
               Upload Dokumen Pensiun
             </AppHeading>
             <AppText color="muted">
-              {employee.nama} • Jenis: {pensionType.toUpperCase()} • {requiredDocuments} dokumen diperlukan
+              {(employee?.nama || createdApplication?.nama_pegawai) as string} • Jenis: {String(effectivePensionType || '').toUpperCase()} • {requiredDocuments} dokumen diperlukan
             </AppText>
           </div>
         </div>
@@ -281,7 +305,7 @@ export default function DocumentUpload() {
             <div className="flex items-center justify-between">
               <AppText size="lg" weight="semibold">Progress Upload</AppText>
               <AppText size="lg" weight="bold" className="text-green-600 dark:text-orange-400">
-                {uploadedFiles.length}/{requiredDocuments}
+                {uploadedCount}/{requiredDocuments}
               </AppText>
             </div>
             <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
@@ -324,7 +348,7 @@ export default function DocumentUpload() {
             variant="hero"
             size="lg"
             onClick={handleSubmit}
-            disabled={uploadedFiles.length < requiredDocuments}
+            disabled={uploadedCount < requiredDocuments}
             className="hover:scale-105 transition-all duration-200"
           >
             {uploadedFiles.length >= requiredDocuments ? (
@@ -335,7 +359,7 @@ export default function DocumentUpload() {
             ) : (
               <>
                 <Upload className="h-5 w-5 mr-2" />
-                Upload Dokumen ({uploadedFiles.length}/{requiredDocuments})
+                Upload Dokumen ({uploadedCount}/{requiredDocuments})
               </>
             )}
           </AppButton>

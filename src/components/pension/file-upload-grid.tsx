@@ -1,12 +1,12 @@
 import * as React from "react"
 import { useState, useRef } from "react"
-import { Upload, File, X, Eye, Check, Loader2 } from "lucide-react"
+import { Upload, File as FileIcon, X, Eye, Check, Loader2 } from "lucide-react"
 import { AppButton } from "@/components/ui/app-button"
 import { AppText } from "@/components/ui/app-typography"
 import { Card, CardContent } from "@/components/ui/card"
 import { DocumentSection } from "@/components/pension/document-section"
 import { cn } from "@/lib/utils"
-import { apiUploadFile, apiGetPensionApplicationFiles, apiDeleteFile, FileUploadResponse } from "@/lib/api"
+import { API_BASE_URL, getAuthHeaders, apiUploadFile, apiGetPensionApplicationFiles, apiDeleteFile, FileUploadResponse } from "@/lib/api"
 
 interface FileUploadSlot {
   id: string
@@ -25,6 +25,7 @@ interface FileUploadGridProps {
   pengajuanId?: string | null
   onUploadSuccess?: (uploadedFile: FileUploadResponse) => void
   onUploadError?: (error: string) => void
+  existingFiles?: FileUploadResponse[]
 }
 
 const mandatoryDocuments = [
@@ -73,7 +74,8 @@ export function FileUploadGrid({
   pensionType,
   pengajuanId,
   onUploadSuccess,
-  onUploadError
+  onUploadError,
+  existingFiles = []
 }: FileUploadGridProps) {
   const [files, setFiles] = useState<File[]>(uploadedFiles)
   const [dragActive, setDragActive] = useState(false)
@@ -279,10 +281,42 @@ export function FileUploadGrid({
     const slot = slots.find(s => s.id === slotIndex)
     if (!slot) return null
     
-    const hasFile = slot.file
-    const fileId = `${slotIndex}-${slot.file?.name || ''}`
+    const jenisDokumenForSlot = documentLabels[slotIndex] ? mapDocumentLabelToJenisDokumen(documentLabels[slotIndex]) : undefined
+    const serverFileForSlot = existingFiles.find(f => f.jenis_dokumen === jenisDokumenForSlot)
+    const hasFile = slot.file || serverFileForSlot
+    const fileId = `${slotIndex}-${slot.file?.name || serverFileForSlot?.nama_file || ''}`
     const isUploading = uploadingFiles.has(fileId)
     
+    const handleServerPreview = async () => {
+      if (!serverFileForSlot) return
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/files/${serverFileForSlot.id}/preview`, {
+          headers: getAuthHeaders()
+        })
+        if (!res.ok) throw new Error('Gagal memuat preview')
+        const blob = await res.blob()
+        const fileURL = URL.createObjectURL(blob)
+        // Create a File-like object for preview modal consumption
+        const fileLike: any = {
+          name: serverFileForSlot.nama_asli || serverFileForSlot.nama_file || 'dokumen',
+          size: blob.size,
+          type: serverFileForSlot.mime_type || blob.type,
+          // For compatibility with preview modal, expose object URL
+          _objectUrl: fileURL
+        }
+        // Prefer constructing a real File when supported
+        try {
+          const realFile = new window.File([blob] as any, fileLike.name, { type: fileLike.type } as any)
+          onFilePreview?.(realFile as any)
+        } catch {
+          onFilePreview?.(fileLike as any)
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Preview gagal'
+        setErrors(prev => ({ ...prev, [slotIndex]: msg }))
+      }
+    }
+
     return (
       <Card
         key={slotIndex}
@@ -344,10 +378,10 @@ export function FileUploadGrid({
                   {documentLabels[slotIndex] || `Dokumen ${slotIndex + 1}`}
                 </AppText>
                 <AppText size="xs" color="muted" className="truncate">
-                  {hasFile.name}
+                  {slot.file ? slot.file.name : (serverFileForSlot?.nama_asli || serverFileForSlot?.nama_file)}
                 </AppText>
                 <AppText size="xs" color="muted">
-                  {formatFileSize(hasFile.size)}
+                  {slot.file ? formatFileSize(slot.file.size) : (serverFileForSlot ? formatFileSize(serverFileForSlot.size) : '')}
                 </AppText>
               </div>
 
@@ -365,7 +399,7 @@ export function FileUploadGrid({
                   variant="ghost"
                   size="sm"
                   className="px-2 hover:shadow-card hover:scale-105 transition-all duration-200"
-                  onClick={() => onFilePreview?.(hasFile)}
+                  onClick={() => (slot.file ? onFilePreview?.(slot.file) : handleServerPreview())}
                 >
                   <Eye className="w-3 h-3" />
                 </AppButton>
@@ -381,7 +415,7 @@ export function FileUploadGrid({
             >
               <div className="text-center">
                 <div className="p-4 bg-orange/10 rounded-xl inline-flex group-hover:bg-orange/20 transition-colors duration-200">
-                  <File className="w-8 h-8 text-orange" />
+                  <FileIcon className="w-8 h-8 text-orange" />
                 </div>
               </div>
               
