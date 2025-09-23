@@ -146,8 +146,7 @@ export default function SuratIndex() {
     return `${d} ${monthName} ${yyyy}`
   }, [letter?.signatureDateInput])
 
-  const handlePrintNow = () => {
-    const printContents = document.getElementById("surat-print-area-index")?.innerHTML || ""
+  const handlePrintWithItem = (item: any) => {
     const base = `${window.location.origin}`
     
     // Create a new window/tab for printing
@@ -156,6 +155,179 @@ export default function SuratIndex() {
       alert('Popup blocked! Please allow popups for this site to print documents.')
       return
     }
+    
+    // Generate signature date from item data
+    const formatSignatureDate = (signatureDateInput: string) => {
+      if (!signatureDateInput) return ""
+      const parts = signatureDateInput.split("-")
+      if (parts.length !== 3) return ""
+      const yyyy = parts[0]
+      const mm = parseInt(parts[1], 10)
+      const d = parseInt(parts[2], 10)
+      const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"]
+      const monthName = months[(mm - 1) % 12] || ""
+      return `${d} ${monthName} ${yyyy}`
+    }
+    
+    const documentNumberPage = item.nomorSurat || ""
+    
+    const printContent = `
+      <div class="w-full bg-white text-black">
+        <style>
+          @page { size: auto; margin: 0; }
+          @media print { body { -webkit-print-color-adjust: exact; } }
+          .sheet { padding: 1.5cm 2cm; page-break-after: always; }
+          .sheet:last-child { page-break-after: auto; }
+          .content-wrapper { margin: 0 1cm; }
+          .header { border-bottom: 3px solid black; padding-bottom: 12px; margin-bottom: 20px; overflow: hidden; }
+          .header .logo { width: 100px; height: 100px; float: left; margin-right: 10px; object-fit: contain; }
+          .header-text { font-size: 11.5pt; font-weight: bold; line-height: 1.2; text-align: center; margin: 0; }
+          .header-info { font-size: 10.5pt; line-height: 1.1; text-align: center; margin: 5px 0 0 0; }
+          .title { font-size: 10.5pt; font-weight: bold; text-align: center; margin: 8px 0; }
+          .document-number { text-align: center; margin-bottom: 6px; }
+          .data-row { display: flex; margin-bottom: 6px; }
+          .data-label { width: 150px; flex-shrink: 0; }
+          .data-colon { width: 20px; flex-shrink: 0; }
+          .data-value { flex-grow: 1; }
+          .statement-text { margin: 20px 0; text-align: justify; line-height: 1.5; }
+          .signature-section { margin-top: 20px; text-align: right; }
+          .signature-inner { display: inline-block; text-align: left; }
+          .signature-date { margin-bottom: 1px;}
+          .signature-title { margin-bottom: 36px; }
+          .signature-name { font-weight: bold; text-decoration: underline; }
+          .signature-nip { margin-top: 5px; }
+          .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; }
+          .reference-note { font-size: 8pt; margin-bottom: 15px; text-align: right; }
+        </style>
+
+        <!-- Halaman 1 -->
+        <section class="sheet">
+          <div class="header">
+            <img src="${base}/logo-kemenag.png" alt="Logo Kementerian Agama" class="logo" />
+            <div class="header-content">
+              <div class="header-text">
+                KEMENTERIAN AGAMA REPUBLIK INDONESIA<br />
+                KANTOR WILAYAH KEMENTERIAN AGAMA<br />
+                PROVINSI NUSA TENGGARA BARAT
+              </div>
+              <div class="header-info">
+                Jalan Udayana No. 6 Tlp. 633040 Fax ( 0370 ) 622317 Mataram<br />
+                Website : http://ntb.kemenag.go.id email : updepagntb@gmail.com
+              </div>
+            </div>
+          </div>
+
+          <div class="content-wrapper">
+            <div class="title">
+              <strong>SURAT PERNYATAAN</strong><br />
+              <strong>TIDAK PERNAH DIJATUHI HUKUMAN DISIPLIN TINGKAT SEDANG / BERAT</strong>
+            </div>
+
+            <div class="document-number">Nomor : ${documentNumberPage}</div>
+
+            <div class="signatory-info">
+              <p>Yang bertanda tangan dibawah ini :</p>
+              <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+            </div>
+
+            <div class="subject-info" style="margin-top: 20px;">
+              <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
+              <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPegawai || "").replace(/\D+/g, "")}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${item.unitPegawai || ""}</div></div>
+            </div>
+
+            <div class="statement-text">
+              <p>dalam 1 ( satu ) tahun terakhir tidak pernah dijatuhi hukuman disiplin tingkat sedang/berat.</p>
+            </div>
+
+            <div class="statement-text">
+              <p>Demikian Surat Pernyataan ini saya buat dengan sesungguhnya dengan mengingat sumpah jabatan dan apabila dikemudian hari ternyata isi surat pernyataan ini tidak benar yang mengakibatkan kerugian bagi negara, maka saya bersedia menanggung kerugian tersebut.</p>
+            </div>
+
+            <div class="signature-section">
+              <div class="signature-inner">
+                <div class="signature-date">${item.signaturePlace || ""}${item.signaturePlace && item.signatureDateInput ? ", " : ""}${formatSignatureDate(item.signatureDateInput || "")}</div>
+                <div class="signature-title">KEPALA</div>
+                ${item.signatureMode === "tte" ? `<div class="signature-anchor">${item.signatureAnchor || "^"}</div>` : ""}
+                <div class="signature-name">${item.namaPenandatangan || ""}</div>
+                <div class="signature-nip">NIP. ${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Halaman 2 -->
+        <section class="sheet">
+          <div class="content-wrapper">
+            <div class="reference-note">
+              ANAK LAMPIRAN 4<br />
+              PERATURAN BADAN KEPEGAWAIAN NEGARA<br />
+              REPUBLIK INDONESIA<br />
+              NOMOR 2 TAHUN 2018<br />
+              TENTANG<br />
+              PEDOMAN PEMBERIAN PERTIMBANGAN TEHNIS<br />
+              PENSIUN PEGAWAI NEGERI SIPIL DAN PENSIUN<br />
+              JANDA/DUDA PEGAWAI NEGERI SIPIL
+            </div>
+
+            <div class="title">
+              <strong>SURAT PERNYATAAN</strong><br />
+              <strong>
+                TIDAK SEDANG MENJALANI PROSES PIDANA ATAU PERNAH DIPIDANA PENJARA BERDASARKAN
+                PUTUSAN PENGADILAN YANG TELAH BERKEKUATAN HUKUM TETAP
+              </strong>
+            </div>
+
+            <div class="document-number">Nomor : ${documentNumberPage}</div>
+
+            <div class="signatory-info">
+              <p>Yang bertanda tangan dibawah ini</p>
+              <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+              <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.jabatanPenandatangan || ""}</div></div>
+            </div>
+
+            <div class="subject-info" style="margin-top: 20px;">
+              <p>Dengan ini menyatakan dengan sesungguhnya, bahwa Pegawai Negeri Sipil :</p>
+              <div class="data-row"><div class="data-label">Nama</div><div class="data-colon">:</div><div class="data-value">${item.namaPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Nip</div><div class="data-colon">:</div><div class="data-value">${(item.nipPegawai || "").replace(/\D+/g, "")}</div></div>
+              <div class="data-row"><div class="data-label">Pangkat/Golongan Ruang</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Jabatan</div><div class="data-colon">:</div><div class="data-value">${item.posisiPegawai || ""}</div></div>
+              <div class="data-row"><div class="data-label">Instansi</div><div class="data-colon">:</div><div class="data-value">${item.unitPegawai || ""}</div></div>
+            </div>
+
+            <div class="statement-text">
+              <p>
+                Tidak sedang menjalani proses pidana atau pernah dipidana penjara berdasarkan putusan pengadilan yang telah berkekuatan hukum tetap karena melakukan tindak pidana kejahatan jabatan atau tindak pidana kejahatan yang ada hubungannya dengan jabatan dan/atau pidana umum.
+              </p>
+            </div>
+
+            <div class="statement-text">
+              <p>
+                Demikian surat pernyataan ini saya buat dengan sesungguhnya dengan mengingat sumpah jabatan dan apabila dikemudian hari ternyata isi surat pernyataan ini tidak benar yang mengakibatkan kerugian bagi negara, maka saya bersedia menanggung kerugian negara sesuai dengan ketentuan peraturan perundang-undangan.
+              </p>
+            </div>
+
+            <div class="signature-section">
+              <div class="signature-inner">
+                <div class="signature-date">${item.signaturePlace || ""}${item.signaturePlace && item.signatureDateInput ? ", " : ""}${formatSignatureDate(item.signatureDateInput || "")}</div>
+                <div class="signature-title">KEPALA</div>
+                ${item.signatureMode === "tte" ? `<div class="signature-anchor">${item.signatureAnchor || "^"}</div>` : ""}
+                <div class="signature-name">${item.namaPenandatangan || ""}</div>
+                <div class="signature-nip">NIP. ${(item.nipPenandatangan || "").replace(/\D+/g, "")}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    `
     
     const printDocument = printWindow.document
     printDocument.open()
@@ -192,7 +364,7 @@ export default function SuratIndex() {
         </head>
         <body>
           <div class="print-content">
-            ${printContents}
+            ${printContent}
           </div>
         </body>
       </html>
@@ -203,11 +375,11 @@ export default function SuratIndex() {
     const waitForImages = async () => {
       const images = Array.from(printDocument.images || [])
       await Promise.all(images.map((img) => 
-        img.complete && img.naturalWidth > 0 
-          ? Promise.resolve() 
-          : new Promise<void>((resolve) => { 
-              img.onload = () => resolve() 
-              img.onerror = () => resolve() 
+        img.complete && img.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              img.onload = () => resolve()
+              img.onerror = () => resolve()
             })
       ))
     }
@@ -218,6 +390,15 @@ export default function SuratIndex() {
       // Close the window after printing (optional)
       // printWindow.close()
     })
+  }
+
+  const handlePrintNow = () => {
+    if (!letter) {
+      console.error('No letter selected for printing')
+      return
+    }
+    
+    handlePrintWithItem(letter)
   }
 
   return (
@@ -232,11 +413,8 @@ export default function SuratIndex() {
             window.location.href = `/generate-surat/hukuman-disiplin?edit=${encodeURIComponent(item.id)}`
           }}
           onPrint={(item) => {
-            setPrintLetterId(item.id)
-            // Directly print without opening modal
-            setTimeout(() => {
-              handlePrintNow()
-            }, 100)
+            // Directly print with the item data
+            handlePrintWithItem(item)
           }}
         />
 
