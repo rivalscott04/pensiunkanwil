@@ -53,6 +53,7 @@ const mapDocumentLabelToJenisDokumen = (label: string): string => {
     "Buku Nikah": "buku_nikah",
     "Kartu Keluarga (KK)": "kartu_keluarga",
     "SKP Terakhir": "skp_terakhir",
+    "SK Pensiun": "sk_pensiun",
     "Surat Keterangan Sakit": "lainnya",
     "Akta Kematian": "lainnya",
     "Suket Janda/Duda": "lainnya",

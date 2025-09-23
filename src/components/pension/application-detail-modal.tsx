@@ -25,9 +25,12 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  FileIcon
+  FileIcon,
+  Upload
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
+import { apiUploadFile } from "@/lib/api"
 
 interface Application {
   id: string
@@ -37,6 +40,12 @@ interface Application {
   jenisPensiun: string
   status: 'draft' | 'diajukan' | 'diterima' | 'ditolak'
   tanggalUpdate: string
+  files?: Array<{
+    id: number
+    jenis_dokumen: string
+    nama_asli: string
+    created_at: string
+  }>
 }
 
 interface ApplicationDetailModalProps {
@@ -47,6 +56,8 @@ interface ApplicationDetailModalProps {
 
 export function ApplicationDetailModal({ isOpen, onClose, application }: ApplicationDetailModalProps) {
   const { toast } = useToast()
+  const { user } = useAuth()
+  const [uploadingSk, setUploadingSk] = useState(false)
   
   if (!application) return null
 
@@ -92,6 +103,32 @@ export function ApplicationDetailModal({ isOpen, onClose, application }: Applica
     })
   }
 
+  const triggerUploadSk = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.pdf'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      setUploadingSk(true)
+      try {
+        await apiUploadFile(String(application!.id), file, 'sk_pensiun', false)
+        toast({ title: 'SK Pensiun Terunggah', description: 'Dokumen SK Pensiun berhasil diunggah.' })
+        // Refresh the application data to show updated files
+        window.location.reload()
+      } catch (e) {
+        toast({ title: 'Gagal Upload', description: e instanceof Error ? e.message : 'Upload gagal', variant: 'destructive' })
+      } finally {
+        setUploadingSk(false)
+      }
+    }
+    input.click()
+  }
+
+  // Check if SK Pensiun file exists
+  const skPensiunFile = application?.files?.find(file => file.jenis_dokumen === 'sk_pensiun')
+  const hasSkPensiun = !!skPensiunFile
+
   // Mock data removed - now using real API data
   const documents: any[] = []
 
@@ -136,7 +173,7 @@ export function ApplicationDetailModal({ isOpen, onClose, application }: Applica
 
         <ScrollArea className="flex-1 pr-6">
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="documents">Dokumen</TabsTrigger>
               <TabsTrigger value="history">Riwayat</TabsTrigger>
@@ -282,6 +319,39 @@ export function ApplicationDetailModal({ isOpen, onClose, application }: Applica
                       silakan hubungi bagian HRD.
                     </AppText>
                   </div>
+
+                  {user?.role === 'superadmin' && application.status === 'diterima' && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <AppText size="sm" color="muted">SK Pensiun</AppText>
+                          <Badge variant={hasSkPensiun ? "default" : "secondary"}>
+                            {hasSkPensiun ? "Sudah diunggah" : "Belum diunggah"}
+                          </Badge>
+                        </div>
+                        {hasSkPensiun ? (
+                          <div className="space-y-2">
+                            <AppText size="sm" color="muted">
+                              File: {skPensiunFile?.nama_asli}
+                            </AppText>
+                            <AppText size="sm" color="muted">
+                              Diunggah: {formatDate(skPensiunFile?.created_at || '')}
+                            </AppText>
+                            <Button onClick={triggerUploadSk} disabled={uploadingSk} variant="outline" className="justify-start">
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploadingSk ? 'Mengunggah...' : 'Ganti SK Pensiun'}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button onClick={triggerUploadSk} disabled={uploadingSk} className="justify-start">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploadingSk ? 'Mengunggah...' : 'Upload SK Pensiun'}
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

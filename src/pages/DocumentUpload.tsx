@@ -15,11 +15,14 @@ import {
   PensionApplication,
   FileUploadResponse 
 } from "@/lib/api"
+import { apiUpdatePensionApplicationStatus } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function DocumentUpload() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user } = useAuth()
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [previewFile, setPreviewFile] = useState<File | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
@@ -139,15 +142,21 @@ export default function DocumentUpload() {
     
     switch (type) {
       case "bup":
-        return mandatoryLabels
+        return user?.role === 'superadmin' ? [...mandatoryLabels, "SK Pensiun"] : mandatoryLabels
       case "sakit":
-        return [...mandatoryLabels, "Surat Keterangan Sakit"]
+        return user?.role === 'superadmin'
+          ? [...mandatoryLabels, "Surat Keterangan Sakit", "SK Pensiun"]
+          : [...mandatoryLabels, "Surat Keterangan Sakit"]
       case "janda_duda":
-        return [...mandatoryLabels, "Akta Kematian", "Suket Janda/Duda", "Pas Foto Pasangan"]
+        return user?.role === 'superadmin'
+          ? [...mandatoryLabels, "Akta Kematian", "Suket Janda/Duda", "Pas Foto Pasangan", "SK Pensiun"]
+          : [...mandatoryLabels, "Akta Kematian", "Suket Janda/Duda", "Pas Foto Pasangan"]
       case "aps":
-        return [...mandatoryLabels, "Surat Usul PPK", "Surat Permohonan PPS"]
+        return user?.role === 'superadmin'
+          ? [...mandatoryLabels, "Surat Usul PPK", "Surat Permohonan PPS", "SK Pensiun"]
+          : [...mandatoryLabels, "Surat Usul PPK", "Surat Permohonan PPS"]
       default:
-        return mandatoryLabels
+        return user?.role === 'superadmin' ? [...mandatoryLabels, "SK Pensiun"] : mandatoryLabels
     }
   }
 
@@ -187,26 +196,47 @@ export default function DocumentUpload() {
     }
 
     try {
-      // Submit the application
-      const submittedApp = await apiSubmitPensionApplication(pengajuanId)
-      setCreatedApplication(submittedApp)
-      
-      toast({
-        title: "Pengajuan Berhasil",
-        description: `Pengajuan pensiun untuk ${employee?.nama} berhasil dikirim`,
-      })
+      // For superadmin: finalize directly to diterima
+      if (user?.role === 'superadmin') {
+        const submittedApp = await apiUpdatePensionApplicationStatus(pengajuanId, 'diterima')
+        setCreatedApplication(submittedApp)
 
-      // Navigate to success page or back to pengajuan list
-      navigate('/pengajuan', {
-        state: {
-          step: 'success',
-          employee,
-          pensionType,
-          uploadedFiles,
-          pengajuanId,
-          application: submittedApp
-        }
-      })
+        toast({
+          title: "Pengajuan Diselesaikan",
+          description: `Pengajuan pensiun untuk ${employee?.nama} selesai (diterima).`,
+        })
+
+        navigate('/pengajuan', {
+          state: {
+            step: 'success',
+            employee,
+            pensionType,
+            uploadedFiles,
+            pengajuanId,
+            application: submittedApp
+          }
+        })
+      } else {
+        // Operator: normal submit flow
+        const submittedApp = await apiSubmitPensionApplication(pengajuanId)
+        setCreatedApplication(submittedApp)
+        
+        toast({
+          title: "Pengajuan Berhasil",
+          description: `Pengajuan pensiun untuk ${employee?.nama} berhasil dikirim`,
+        })
+
+        navigate('/pengajuan', {
+          state: {
+            step: 'success',
+            employee,
+            pensionType,
+            uploadedFiles,
+            pengajuanId,
+            application: submittedApp
+          }
+        })
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Gagal mengirim pengajuan"
       toast({
@@ -229,6 +259,8 @@ export default function DocumentUpload() {
   if (!employee || !pensionType) return null
 
   const requiredDocuments = getDocumentCount(pensionType)
+  const labels = getDocumentLabels(pensionType)
+  const maxFiles = labels.length
   const progressPercentage = Math.round((uploadedFiles.length / requiredDocuments) * 100)
 
   return (
@@ -278,11 +310,11 @@ export default function DocumentUpload() {
 
         {/* File Upload Grid */}
         <FileUploadGrid
-          maxFiles={requiredDocuments}
+          maxFiles={maxFiles}
           onFilesChange={handleFileUpload}
           uploadedFiles={uploadedFiles}
           onFilePreview={handleFilePreview}
-          documentLabels={getDocumentLabels(pensionType)}
+          documentLabels={labels}
           pensionType={pensionType}
           pengajuanId={pengajuanId}
           onUploadSuccess={handleUploadSuccess}
@@ -305,7 +337,7 @@ export default function DocumentUpload() {
             {uploadedFiles.length >= requiredDocuments ? (
               <>
                 <CheckCircle className="h-5 w-5 mr-2" />
-                Lanjutkan ke Konfirmasi
+                {user?.role === 'superadmin' ? 'Selesaikan Pengajuan' : 'Lanjutkan ke Konfirmasi'}
               </>
             ) : (
               <>

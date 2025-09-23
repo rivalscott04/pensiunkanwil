@@ -22,7 +22,7 @@ class FileController extends Controller
         $request->validate([
             'pengajuan_id' => 'required|exists:pengajuan,id',
             'file' => 'required|file|mimes:pdf|max:350', // 350KB limit
-            'jenis_dokumen' => 'required|in:pengantar,dpcp,sk_cpns,skkp_terakhir,super_hd,super_pidana,pas_foto,buku_nikah,kartu_keluarga,skp_terakhir,lainnya',
+            'jenis_dokumen' => 'required|in:pengantar,dpcp,sk_cpns,skkp_terakhir,super_hd,super_pidana,pas_foto,buku_nikah,kartu_keluarga,skp_terakhir,sk_pensiun,lainnya',
             'is_required' => 'boolean',
             'keterangan' => 'nullable|string'
         ]);
@@ -38,8 +38,9 @@ class FileController extends Controller
             ], 403);
         }
 
-        // Check if pengajuan is in draft status
-        if ($pengajuan->status !== 'draft') {
+        // Allow uploads only when draft, except superadmin may upload SK Pensiun anytime
+        $isUploadingSkPensiun = $request->jenis_dokumen === 'sk_pensiun';
+        if ($pengajuan->status !== 'draft' && !($user->isSuperAdmin() && $isUploadingSkPensiun)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Cannot upload files for pengajuan that is not in draft status'
@@ -284,7 +285,7 @@ class FileController extends Controller
         $request->validate([
             'pengajuan_id' => 'required|exists:pengajuan,id',
             'files.*' => 'required|file|mimes:pdf|max:350',
-            'jenis_dokumen.*' => 'required|in:pengantar,dpcp,sk_cpns,skkp_terakhir,super_hd,super_pidana,pas_foto,buku_nikah,kartu_keluarga,skp_terakhir,lainnya'
+            'jenis_dokumen.*' => 'required|in:pengantar,dpcp,sk_cpns,skkp_terakhir,super_hd,super_pidana,pas_foto,buku_nikah,kartu_keluarga,skp_terakhir,sk_pensiun,lainnya'
         ]);
 
         $user = auth()->user();
@@ -298,11 +299,11 @@ class FileController extends Controller
             ], 403);
         }
 
-        // Check if pengajuan is in draft status
+        // For bulk upload, keep draft-only restriction (superadmin can upload SK Pensiun individually via single upload)
         if ($pengajuan->status !== 'draft') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cannot upload files for pengajuan that is not in draft status'
+                'message' => 'Cannot bulk upload files for pengajuan that is not in draft status'
             ], 422);
         }
 
