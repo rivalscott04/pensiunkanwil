@@ -15,6 +15,7 @@ import { saveLetterService, getLetterById } from "@/lib/letters-service";
 export default function GeneratePengantarPensiun() {
   const url = new URL(window.location.href);
   const editId = url.searchParams.get("edit");
+  const reprintId = url.searchParams.get("reprint");
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);
   const [pegawaiList, setPegawaiList] = React.useState<Personnel[]>([]);
 
@@ -119,13 +120,14 @@ export default function GeneratePengantarPensiun() {
   const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
   const [saving, setSaving] = React.useState<boolean>(false);
 
-  // Prefill when editing existing letter
+  // Prefill when editing or reprint existing letter
   React.useEffect(() => {
     let cancelled = false
     const load = async () => {
-      if (!editId) return
+      const id = reprintId || editId
+      if (!id) return
       try {
-        const letter = await getLetterById(editId)
+        const letter = await getLetterById(id)
         if (cancelled || !letter) return
         // Basic fields
         setNomorSurat((letter.nomorSurat || "").split("/")[0] || "")
@@ -164,17 +166,18 @@ export default function GeneratePengantarPensiun() {
           }
         })
         setRowExtras(extras)
+        if (reprintId) setTimeout(() => handlePrint(), 0)
       } catch (e) {
         // ignore
       }
     }
     load()
     return () => { cancelled = true }
-  }, [editId])
+  }, [editId, reprintId])
 
   const handleSave = async () => {
     const payload: any = {
-      id: editId || "",
+      id: (reprintId || editId) || "",
       nomorSurat: finalNomorSurat,
       tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
       namaPegawai: pegawaiList[0]?.name || "",

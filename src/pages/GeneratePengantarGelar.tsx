@@ -15,6 +15,7 @@ import { saveLetterService, getLetterById } from "@/lib/letters-service";
 export default function GeneratePengantarGelar() {
   const url = new URL(window.location.href);
   const editId = url.searchParams.get("edit");
+  const reprintId = url.searchParams.get("reprint");
 
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);
   const [pegawaiList, setPegawaiList] = React.useState<Personnel[]>([]);
@@ -120,13 +121,14 @@ export default function GeneratePengantarGelar() {
   const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
   const [saving, setSaving] = React.useState<boolean>(false);
 
-  // Prefill when editing existing letter
+  // Prefill when editing or reprint existing letter
   React.useEffect(() => {
     let cancelled = false
     const load = async () => {
-      if (!editId) return
+      const id = reprintId || editId
+      if (!id) return
       try {
-        const letter = await getLetterById(editId)
+        const letter = await getLetterById(id)
         if (cancelled || !letter) return
         // Basic fields
         setNomorSurat((letter.nomorSurat || "").split("/")[0] || "")
@@ -164,13 +166,15 @@ export default function GeneratePengantarGelar() {
           }
         })
         setRowExtras(extras)
+        // Auto print when reprint
+        if (reprintId) setTimeout(() => handlePrint(), 0)
       } catch (e) {
         // ignore, keep empty form
       }
     }
     load()
     return () => { cancelled = true }
-  }, [editId])
+  }, [editId, reprintId])
 
   const handleSave = async () => {
     const payload: any = {
