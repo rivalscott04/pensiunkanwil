@@ -399,7 +399,32 @@ export default function SuratIndex() {
           data={letters}
           loading={loading}
           onCreateNew={handleCreate}
-          onView={(item) => { setViewLetterId(item.id); setViewOpen(true) }}
+          onView={(item) => {
+            const t = (item as any)?.type || ""
+            const id = encodeURIComponent(item.id)
+            let href = `/generate-surat/hukuman-disiplin?edit=${id}`
+            switch (t) {
+              case "pengantar_gelar":
+                href = `/generate-surat/pengantar-gelar?edit=${id}`
+                break
+              case "pengantar_pensiun":
+                href = `/generate-surat/pengantar-pensiun?edit=${id}`
+                break
+              case "sptjm_gelar":
+                href = `/generate-surat/sptjm?type=gelar&edit=${id}`
+                break
+              case "sptjm_pensiun":
+                href = `/generate-surat/sptjm?type=pensiun&edit=${id}`
+                break
+              case "surat_meninggal":
+                href = `/generate-surat/meninggal?edit=${id}`
+                break
+              case "hukuman_disiplin":
+              default:
+                href = `/generate-surat/hukuman-disiplin?edit=${id}`
+            }
+            window.location.href = href
+          }}
 					onEdit={(item) => {
 						const t = (item as any)?.type || ""
 						const id = encodeURIComponent(item.id)
@@ -432,8 +457,30 @@ export default function SuratIndex() {
             setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
           onPrint={(item) => {
-            // Directly print with the item data
-            handlePrintWithItem(item)
+            const t = (item as any)?.type || ""
+            const id = encodeURIComponent(item.id)
+            let href = `/generate-surat/hukuman-disiplin?reprint=${id}`
+            switch (t) {
+              case "pengantar_gelar":
+                href = `/generate-surat/pengantar-gelar?reprint=${id}`
+                break
+              case "pengantar_pensiun":
+                href = `/generate-surat/pengantar-pensiun?reprint=${id}`
+                break
+              case "sptjm_gelar":
+                href = `/generate-surat/sptjm?type=gelar&reprint=${id}`
+                break
+              case "sptjm_pensiun":
+                href = `/generate-surat/sptjm?type=pensiun&reprint=${id}`
+                break
+              case "surat_meninggal":
+                href = `/generate-surat/meninggal?reprint=${id}`
+                break
+              case "hukuman_disiplin":
+              default:
+                href = `/generate-surat/hukuman-disiplin?reprint=${id}`
+            }
+            window.location.href = href
           }}
         />
 
