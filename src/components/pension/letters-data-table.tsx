@@ -74,15 +74,15 @@ export function LettersDataTable({ data, loading, items, onCreateNew, onView, on
     new Date(iso).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })
 
   const formatLetterType = (type: string) => {
-    const typeMap: Record<string, string> = {
-      'hukuman_disiplin': 'Hukuman Disiplin',
-      'pengantar_pensiun': 'Pengantar Pensiun',
+    const map: Record<string, string> = {
       'pengantar_gelar': 'Pengantar Penyematan Gelar',
-      'sptjm_gelar': 'Surat Pertanggung Jawaban Mutlak Penyematan Gelar',
-      'sptjm_pensiun': 'Surat Pertanggung Jawaban Mutlak Pensiun',
-      'surat_meninggal': 'Surat Keterangan Meninggal'
+      'pengantar_pensiun': 'Pengantar Pensiun',
+      'hukuman_disiplin': 'Hukuman Disiplin',
+      'sptjm_gelar': 'SPTJM (Pengantar Gelar)',
+      'sptjm_pensiun': 'SPTJM (Pengantar Pensiun)',
+      'surat_meninggal': 'Surat Keterangan Meninggal',
     }
-    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    return map[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   }
 
   const handleDeleteClick = (item: LetterItem) => {
@@ -198,7 +198,7 @@ export function LettersDataTable({ data, loading, items, onCreateNew, onView, on
                     <TableCell>{item.namaPegawai}</TableCell>
                     <TableCell>{item.namaPenandatangan}</TableCell>
                     <TableCell>{formatDate(item.tanggalSurat)}</TableCell>
-                    <TableCell className="uppercase text-xs">{(item as any).type || '-'}</TableCell>
+                    <TableCell className="text-xs">{formatLetterType((item as any).type || '')}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
