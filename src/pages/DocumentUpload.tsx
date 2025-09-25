@@ -31,6 +31,8 @@ export default function DocumentUpload() {
   const [pengajuanId, setPengajuanId] = useState<string | null>(null)
   const [createdApplication, setCreatedApplication] = useState<PensionApplication | null>(null)
   const [uploadedFileResponses, setUploadedFileResponses] = useState<FileUploadResponse[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Get data from navigation state
@@ -51,14 +53,19 @@ export default function DocumentUpload() {
   // Create pension application when component mounts
   useEffect(() => {
     const init = async () => {
+      setIsLoading(true)
+      setError(null)
       try {
         // If editing existing application
         if (applicationIdFromQuery && !pengajuanId) {
+          console.log('Loading application with ID:', applicationIdFromQuery)
           const app = await apiGetPensionApplication(applicationIdFromQuery)
+          console.log('Loaded application:', app)
           setCreatedApplication(app)
           setPengajuanId(String(app.id))
           // Load existing uploaded files for progress
           const files = await apiGetPensionApplicationFiles(String(app.id))
+          console.log('Loaded files:', files)
           setUploadedFileResponses(files)
           return
         }
@@ -95,13 +102,17 @@ export default function DocumentUpload() {
         setCreatedApplication(createdApp)
         setPengajuanId(createdApp.id)
       } catch (error) {
+        console.error('Error in DocumentUpload init:', error)
         const errorMessage = error instanceof Error ? error.message : "Gagal memuat/membuat pengajuan"
+        setError(errorMessage)
         toast({
           title: "Error",
           description: errorMessage,
           variant: "destructive"
         })
-        navigate('/pengajuan', { replace: true })
+        // Don't navigate away immediately, let user see the error
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -279,6 +290,61 @@ export default function DocumentUpload() {
   const maxFiles = labels.length
   const uploadedCount = uploadedFileResponses.length
   const progressPercentage = Math.round((uploadedCount / requiredDocuments) * 100)
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-4">
+            <AppButton variant="ghost" size="sm" onClick={() => navigate('/pengajuan')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Kembali
+            </AppButton>
+          </div>
+          <div className="bg-card rounded-lg p-6 shadow-card border border-border">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2">Memuat data pengajuan...</span>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-4">
+            <AppButton variant="ghost" size="sm" onClick={() => navigate('/pengajuan')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Kembali
+            </AppButton>
+          </div>
+          <div className="bg-card rounded-lg p-6 shadow-card border border-border">
+            <div className="flex items-center justify-center text-center">
+              <div>
+                <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold mb-2">Gagal Memuat Data</h3>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <div className="flex gap-2 justify-center">
+                  <AppButton onClick={() => window.location.reload()}>
+                    Coba Lagi
+                  </AppButton>
+                  <AppButton variant="outline" onClick={() => navigate('/pengajuan')}>
+                    Kembali ke Pengajuan
+                  </AppButton>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout>

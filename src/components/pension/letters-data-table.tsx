@@ -219,7 +219,30 @@ export function LettersDataTable({ data, loading, items, onCreateNew, onView, on
                             if (onPrint) {
                               onPrint(item)
                             } else {
-                              window.location.href = `/generate-surat/hukuman-disiplin?reprint=${encodeURIComponent(item.id)}`
+                              const t = (item as any)?.type || ""
+                              const id = encodeURIComponent(item.id)
+                              let href = `/generate-surat/hukuman-disiplin?reprint=${id}`
+                              switch (t) {
+                                case "pengantar_gelar":
+                                  href = `/generate-surat/pengantar-gelar?reprint=${id}`
+                                  break
+                                case "pengantar_pensiun":
+                                  href = `/generate-surat/pengantar-pensiun?reprint=${id}`
+                                  break
+                                case "sptjm_gelar":
+                                  href = `/generate-surat/sptjm?type=gelar&reprint=${id}`
+                                  break
+                                case "sptjm_pensiun":
+                                  href = `/generate-surat/sptjm?type=pensiun&reprint=${id}`
+                                  break
+                                case "surat_meninggal":
+                                  href = `/generate-surat/meninggal?reprint=${id}`
+                                  break
+                                case "hukuman_disiplin":
+                                default:
+                                  href = `/generate-surat/hukuman-disiplin?reprint=${id}`
+                              }
+                              window.location.href = href
                             }
                           }}>
                             <Printer className="h-4 w-4 mr-2" />
