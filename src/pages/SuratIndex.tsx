@@ -188,8 +188,7 @@ export default function SuratIndex() {
 
   const handlePrintWithItem = (item: any) => {
     const base = `${window.location.origin}`
-    
-    // Generate signature date from item data
+
     const formatSignatureDate = (signatureDateInput: string) => {
       if (!signatureDateInput) return ""
       const parts = signatureDateInput.split("-")
@@ -201,9 +200,78 @@ export default function SuratIndex() {
       const monthName = months[(mm - 1) % 12] || ""
       return `${d} ${monthName} ${yyyy}`
     }
-    
+
     const documentNumberPage = item.nomorSurat || ""
-    
+    const type = (item as any)?.type || ""
+
+    // For non-hukdis types, render a lightweight per-type summary template inline to avoid redirecting to edit forms
+    if (type && type !== 'hukuman_disiplin') {
+      const buildRow = (label: string, value?: string) => `<div class=\"data-row\"><div class=\"data-label\">${label}</div><div class=\"data-colon\">:</div><div class=\"data-value\">${value || ''}</div></div>`
+      const commonStyles = `
+        <style>
+          @page { size: auto; margin: 0; }
+          @media print { body { -webkit-print-color-adjust: exact; } }
+          .sheet { padding: 1.5cm 2cm; page-break-after: always; }
+          .sheet:last-child { page-break-after: auto; }
+          .content-wrapper { margin: 0 1cm; }
+          .header { border-bottom: 3px solid black; padding-bottom: 12px; margin-bottom: 20px; overflow: hidden; }
+          .header .logo { width: 100px; height: 100px; float: left; margin-right: 10px; object-fit: contain; }
+          .header-text { font-size: 11.5pt; font-weight: bold; line-height: 1.2; text-align: center; margin: 0; }
+          .header-info { font-size: 10.5pt; line-height: 1.1; text-align: center; margin: 5px 0 0 0; }
+          .title { font-size: 11pt; font-weight: bold; text-align: center; margin: 8px 0; }
+          .document-number { text-align: center; margin-bottom: 6px; }
+          .data-row { display: flex; margin-bottom: 6px; }
+          .data-label { width: 180px; flex-shrink: 0; }
+          .data-colon { width: 20px; flex-shrink: 0; }
+          .data-value { flex-grow: 1; }
+          .signature-section { margin-top: 24px; text-align: right; }
+          .signature-inner { display: inline-block; text-align: left; }
+          .signature-name { font-weight: bold; text-decoration: underline; }
+          .signature-nip { margin-top: 5px; }
+        </style>`
+
+      let title = 'SURAT'
+      if (type === 'pengantar_gelar') title = 'SURAT PENGANTAR PENYEMATAN GELAR'
+      if (type === 'pengantar_pensiun') title = 'SURAT PENGANTAR PENSIUN'
+      if (type === 'sptjm_gelar' || type === 'sptjm_pensiun') title = 'SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK'
+      if (type === 'surat_meninggal') title = 'SURAT KETERANGAN MENINGGAL DUNIA'
+
+      const firstRow = ((item as any)?.pegawaiData || [])[0] || {}
+
+      const html = `
+        <div class=\"w-full bg-white text-black\">
+          ${commonStyles}
+          <section class=\"sheet\">
+            <div class=\"header\">
+              <img src=\"${base}/logo-kemenag.png\" alt=\"Logo Kementerian Agama\" class=\"logo\" />
+              <div class=\"header-content\">
+                <div class=\"header-text\">KEMENTERIAN AGAMA REPUBLIK INDONESIA<br/>KANTOR WILAYAH KEMENTERIAN AGAMA<br/>PROVINSI NUSA TENGGARA BARAT</div>
+                <div class=\"header-info\">Jalan Udayana No. 6 Tlp. 633040 Fax ( 0370 ) 622317 Mataram<br/>Website : http://ntb.kemenag.go.id email : updepagntb@gmail.com</div>
+              </div>
+            </div>
+            <div class=\"content-wrapper\">
+              <div class=\"title\">${title}</div>
+              <div class=\"document-number\">Nomor : ${documentNumberPage}</div>
+              ${buildRow('Penandatangan', item.namaPenandatangan)}
+              ${buildRow('NIP Penandatangan', (item.nipPenandatangan || '').replace(/\\D+/g, ''))}
+              <div class=\"title\" style=\"text-align:left; font-weight:600; margin-top:12px\">Data Pegawai</div>
+              ${buildRow('Nama', firstRow.name || item.namaPegawai)}
+              ${buildRow('NIP', (firstRow.nip || item.nipPegawai || '').replace(/\\D+/g, ''))}
+              ${buildRow('Unit/Jabatan', firstRow.unit || firstRow.position || item.unitPegawai || item.posisiPegawai)}
+              <div class=\"signature-section\">
+                <div class=\"signature-inner\">
+                  <div>${item.signaturePlace || ''}${item.signaturePlace && item.signatureDateInput ? ', ' : ''}${formatSignatureDate(item.signatureDateInput || '')}</div>
+                  <div class=\"signature-name\">${item.namaPenandatangan || ''}</div>
+                  <div class=\"signature-nip\">NIP. ${(item.nipPenandatangan || '').replace(/\\D+/g, '')}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>`
+      printFromContent(html, 'Cetak Surat')
+      return
+    }
+
     const printContent = `
       <div class="w-full bg-white text-black">
         <style>
@@ -440,31 +508,7 @@ export default function SuratIndex() {
             await deleteLetterService(item.id)
             setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
-          onPrint={(item) => {
-            const t = (item as any)?.type || ""
-            const id = encodeURIComponent(item.id)
-            switch (t) {
-              case "pengantar_gelar":
-                window.location.href = `/generate-surat/pengantar-gelar?reprint=${id}`
-                return
-              case "pengantar_pensiun":
-                window.location.href = `/generate-surat/pengantar-pensiun?reprint=${id}`
-                return
-              case "sptjm_gelar":
-                window.location.href = `/generate-surat/sptjm?type=gelar&reprint=${id}`
-                return
-              case "sptjm_pensiun":
-                window.location.href = `/generate-surat/sptjm?type=pensiun&reprint=${id}`
-                return
-              case "surat_meninggal":
-                window.location.href = `/generate-surat/meninggal?reprint=${id}`
-                return
-              default:
-                // Default: print inline (e.g., hukuman_disiplin)
-                handlePrintWithItem(item)
-                return
-            }
-          }}
+          onPrint={(item) => { handlePrintWithItem(item) }}
         />
 
         <Dialog open={printOpen} onOpenChange={setPrintOpen}>
