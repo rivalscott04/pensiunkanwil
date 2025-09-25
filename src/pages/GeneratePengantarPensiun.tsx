@@ -10,9 +10,11 @@ import { ArrowLeft } from "lucide-react";
 import { printFromElement } from "@/lib/print-helper";
 import { PejabatSelector, PegawaiSelector, Personnel } from "@/components/pension/personnel-selectors";
 import { PengantarPensiunTemplate, PengantarPensiunRow } from "@/components/pension/PengantarPensiunTemplate";
-import { saveLetterService } from "@/lib/letters-service";
+import { saveLetterService, getLetterById } from "@/lib/letters-service";
 
 export default function GeneratePengantarPensiun() {
+  const url = new URL(window.location.href);
+  const editId = url.searchParams.get("edit");
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);
   const [pegawaiList, setPegawaiList] = React.useState<Personnel[]>([]);
 
@@ -117,9 +119,62 @@ export default function GeneratePengantarPensiun() {
   const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
   const [saving, setSaving] = React.useState<boolean>(false);
 
+  // Prefill when editing existing letter
+  React.useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!editId) return
+      try {
+        const letter = await getLetterById(editId)
+        if (cancelled || !letter) return
+        // Basic fields
+        setNomorSurat((letter.nomorSurat || "").split("/")[0] || "")
+        setTanggalSuratInput(letter.tanggalSurat || letter.signatureDateInput || "")
+        setTempat(letter.signaturePlace || "Mataram")
+        setSignatureMode((letter.signatureMode as any) || "manual")
+        setSignatureAnchor((letter.signatureAnchor as any) || "^")
+        setAddresseeJabatan((letter as any).addresseeJabatan || "Sekretaris Jenderal Kementerian Agama RI")
+        setAddresseeKota((letter as any).addresseeKota || "Jakarta")
+        // Pejabat
+        setPejabat({
+          name: letter.namaPenandatangan || "",
+          nip: letter.nipPenandatangan || "",
+          position: letter.jabatanPenandatangan || "",
+          unit: "",
+          golongan: (letter as any).golonganPenandatangan,
+        } as any)
+        // Pegawai list and extras (support many rows)
+        const arr: any[] = (letter as any).pegawaiData || []
+        const nextPegawai: Personnel[] = arr.map((r: any, idx: number) => ({
+          id: String(r.id ?? r.nip ?? idx + 1),
+          name: r.name || r.nama || "",
+          nip: r.nip || "",
+          position: r.position || r.jabatan || "",
+          unit: r.unit || "",
+          golongan: r.golongan || r.gol || "",
+        }))
+        setPegawaiList(nextPegawai)
+        const extras: Record<string, { gol: string; job: string; ket: string }> = {}
+        arr.forEach((r: any) => {
+          const nipKey = String(r.nip || "").replace(/\D+/g, "")
+          extras[nipKey] = {
+            gol: r.golongan ?? r.gol ?? "",
+            job: r.jabatanTempatTugas ?? r.job ?? r.position ?? "",
+            ket: r.keterangan ?? r.ket ?? "",
+          }
+        })
+        setRowExtras(extras)
+      } catch (e) {
+        // ignore
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [editId])
+
   const handleSave = async () => {
     const payload: any = {
-      id: "",
+      id: editId || "",
       nomorSurat: finalNomorSurat,
       tanggalSurat: (tanggalSuratInput || new Date().toISOString().slice(0,10)),
       namaPegawai: pegawaiList[0]?.name || "",

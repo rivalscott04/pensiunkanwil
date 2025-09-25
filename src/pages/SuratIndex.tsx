@@ -164,6 +164,15 @@ export default function SuratIndex() {
 
   const letter = React.useMemo(() => letters.find(l => l.id === (printLetterId || viewLetterId)) || null, [letters, printLetterId, viewLetterId])
 
+  const viewPegawaiName = React.useMemo(() => {
+    const arr = (letter as any)?.pegawaiData
+    if (Array.isArray(arr) && arr.length > 0) {
+      const firstName = arr[0]?.name || arr[0]?.nama || letter?.namaPegawai || ""
+      return arr.length > 1 ? `${firstName} dkk.` : firstName
+    }
+    return letter?.namaPegawai || ""
+  }, [letter])
+
   const documentNumberPage = letter?.nomorSurat || ""
   const signatureDate = React.useMemo(() => {
     if (!letter?.signatureDateInput) return ""
@@ -399,32 +408,7 @@ export default function SuratIndex() {
           data={letters}
           loading={loading}
           onCreateNew={handleCreate}
-          onView={(item) => {
-            const t = (item as any)?.type || ""
-            const id = encodeURIComponent(item.id)
-            let href = `/generate-surat/hukuman-disiplin?edit=${id}`
-            switch (t) {
-              case "pengantar_gelar":
-                href = `/generate-surat/pengantar-gelar?edit=${id}`
-                break
-              case "pengantar_pensiun":
-                href = `/generate-surat/pengantar-pensiun?edit=${id}`
-                break
-              case "sptjm_gelar":
-                href = `/generate-surat/sptjm?type=gelar&edit=${id}`
-                break
-              case "sptjm_pensiun":
-                href = `/generate-surat/sptjm?type=pensiun&edit=${id}`
-                break
-              case "surat_meninggal":
-                href = `/generate-surat/meninggal?edit=${id}`
-                break
-              case "hukuman_disiplin":
-              default:
-                href = `/generate-surat/hukuman-disiplin?edit=${id}`
-            }
-            window.location.href = href
-          }}
+          onView={(item) => { setViewLetterId(item.id); setViewOpen(true) }}
 					onEdit={(item) => {
 						const t = (item as any)?.type || ""
 						const id = encodeURIComponent(item.id)
@@ -457,30 +441,8 @@ export default function SuratIndex() {
             setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
           onPrint={(item) => {
-            const t = (item as any)?.type || ""
-            const id = encodeURIComponent(item.id)
-            let href = `/generate-surat/hukuman-disiplin?reprint=${id}`
-            switch (t) {
-              case "pengantar_gelar":
-                href = `/generate-surat/pengantar-gelar?reprint=${id}`
-                break
-              case "pengantar_pensiun":
-                href = `/generate-surat/pengantar-pensiun?reprint=${id}`
-                break
-              case "sptjm_gelar":
-                href = `/generate-surat/sptjm?type=gelar&reprint=${id}`
-                break
-              case "sptjm_pensiun":
-                href = `/generate-surat/sptjm?type=pensiun&reprint=${id}`
-                break
-              case "surat_meninggal":
-                href = `/generate-surat/meninggal?reprint=${id}`
-                break
-              case "hukuman_disiplin":
-              default:
-                href = `/generate-surat/hukuman-disiplin?reprint=${id}`
-            }
-            window.location.href = href
+            // Print directly without navigating to edit
+            handlePrintWithItem(item)
           }}
         />
 
@@ -544,7 +506,7 @@ export default function SuratIndex() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Nama Pegawai</TableCell>
-                      <TableCell>{letter.namaPegawai}</TableCell>
+                      <TableCell>{viewPegawaiName}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">NIP Pegawai</TableCell>

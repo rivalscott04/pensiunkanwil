@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { printFromElement } from "@/lib/print-helper";
 import SuratKeteranganMeninggalTemplate from "@/components/pension/SuratKeteranganMeninggalTemplate";
 import { PegawaiSelector, PejabatSelector, Personnel } from "@/components/pension/personnel-selectors";
-import { saveLetterService } from "@/lib/letters-service";
+import { saveLetterService, getLetterById } from "@/lib/letters-service";
 
 export default function GenerateSuratMeninggal() {
   const url = new URL(window.location.href);
@@ -36,6 +36,53 @@ export default function GenerateSuratMeninggal() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   const keepDigits = (val: string) => val.replace(/\D+/g, "");
+
+  // Prefill when editing existing letter
+  React.useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const id = editId || reprintId
+      if (!id) return
+      try {
+        const letter = await getLetterById(id)
+        if (cancelled || !letter) return
+        const parts = (letter.nomorSurat || "").split("/")
+        setDocumentSequence(parts[0]?.replace("B-", "") || "")
+        setDocumentMonth(parts[parts.length - 2] || "")
+        setDocumentYear(parts[parts.length - 1] || "")
+        setSignaturePlace(letter.signaturePlace || "")
+        setSignatureDateInput(letter.signatureDateInput || letter.tanggalSurat || "")
+        setSignatureMode((letter.signatureMode as any) || "manual")
+        setSignatureAnchor((letter.signatureAnchor as any) || "^")
+        setTanggalMeninggal((letter as any).tanggalMeninggal || "")
+        setDasarSurat((letter as any).dasarSurat || "")
+        if (letter.namaPenandatangan) {
+          setPejabat({
+            id: letter.id || "",
+            name: letter.namaPenandatangan,
+            nip: letter.nipPenandatangan || "",
+            position: letter.jabatanPenandatangan || "",
+            unit: "",
+            golongan: (letter as any).golonganPenandatangan || "",
+          } as any)
+        }
+        if (letter.namaPegawai) {
+          setPegawai({
+            id: letter.id || "",
+            name: letter.namaPegawai,
+            nip: letter.nipPegawai || "",
+            position: letter.posisiPegawai || "",
+            unit: letter.unitPegawai || "",
+            golongan: (letter as any).golonganPegawai || "",
+          } as any)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [editId, reprintId])
 
   const documentNumber = React.useMemo(() => {
     const seqDigits = (documentSequence || "").replace(/\D+/g, "");

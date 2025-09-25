@@ -16,6 +16,7 @@ import { getLetterById, listLettersByType, saveLetterService } from "@/lib/lette
 export default function GenerateSPTJM() {
   const url = new URL(window.location.href);
   const typeParam = (url.searchParams.get("type") || "").toLowerCase();
+  const editId = url.searchParams.get("edit");
   type SptjmType = "gelar" | "pensiun";
   const [sptjmType, setSptjmType] = React.useState<SptjmType>((typeParam === "pensiun" || typeParam === "gelar") ? (typeParam as SptjmType) : "gelar");
 
@@ -38,6 +39,55 @@ export default function GenerateSPTJM() {
       window.history.replaceState({}, "", u.toString());
     }
   }, [sptjmType]);
+
+  // Prefill when editing existing SPTJM
+  React.useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!editId) return
+      try {
+        const letter = await getLetterById(editId)
+        if (cancelled || !letter) return
+        // Determine type from saved letter
+        const lt = (letter as any).type
+        if (lt === 'sptjm_pensiun') setSptjmType('pensiun')
+        if (lt === 'sptjm_gelar') setSptjmType('gelar')
+        // nomor & tanggal
+        setNomorSurat(((letter.nomorSurat || '').split('/')[0] || '').replace('B-', ''))
+        setTanggalInput(letter.signatureDateInput || letter.tanggalSurat || '')
+        setTempat(letter.signaturePlace || 'Mataram')
+        // pejabat
+        setPejabat({
+          id: letter.id || '',
+          name: letter.namaPenandatangan || '',
+          nip: letter.nipPenandatangan || '',
+          position: letter.jabatanPenandatangan || '',
+          golongan: (letter as any).golonganPenandatangan || ''
+        } as any)
+        // Surat rujukan fields
+        setNomorSuratRujukan((letter as any).nomorSuratRujukan || '')
+        setTanggalSuratRujukanInput((letter as any).tanggalSuratRujukan || '')
+        setPerihalSuratRujukan((letter as any).perihalSuratRujukan || (lt === 'sptjm_gelar' ? 'Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS' : 'Usul Pensiun BUP, J/D /KPP'))
+        // atasNama from pegawaiData when pensiun
+        const arr: any[] = (letter as any).pegawaiData || []
+        if (arr.length) {
+          const list: Personnel[] = arr.map((p: any, idx: number) => ({
+            id: String(p.id ?? p.nip ?? idx),
+            name: p.name || p.nama || '',
+            nip: p.nip || '',
+            position: p.position || p.posisi || p.jabatan || '',
+            unit: p.unit || p.unit_kerja || '',
+            golongan: p.golongan || p.gol || ''
+          }))
+          setAtasNama(list)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [editId])
 
   const renderTanggal = React.useCallback((val: string) => {
     if (!val) return "";
