@@ -441,8 +441,29 @@ export default function SuratIndex() {
             setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
           onPrint={(item) => {
-            // Print directly without navigating to edit
-            handlePrintWithItem(item)
+            const t = (item as any)?.type || ""
+            const id = encodeURIComponent(item.id)
+            switch (t) {
+              case "pengantar_gelar":
+                window.location.href = `/generate-surat/pengantar-gelar?reprint=${id}`
+                return
+              case "pengantar_pensiun":
+                window.location.href = `/generate-surat/pengantar-pensiun?reprint=${id}`
+                return
+              case "sptjm_gelar":
+                window.location.href = `/generate-surat/sptjm?type=gelar&reprint=${id}`
+                return
+              case "sptjm_pensiun":
+                window.location.href = `/generate-surat/sptjm?type=pensiun&reprint=${id}`
+                return
+              case "surat_meninggal":
+                window.location.href = `/generate-surat/meninggal?reprint=${id}`
+                return
+              default:
+                // Default: print inline (e.g., hukuman_disiplin)
+                handlePrintWithItem(item)
+                return
+            }
           }}
         />
 
