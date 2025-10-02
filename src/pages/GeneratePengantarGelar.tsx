@@ -42,6 +42,17 @@ export default function GeneratePengantarGelar() {
       if (prev.find((x) => x.nip === p.nip)) return prev;
       return [...prev, p];
     });
+    
+    // Auto-fill jabatan from API data
+    const nipKey = (p.nip || "").replace(/\D+/g, "");
+    setRowExtras((prev) => ({
+      ...prev,
+      [nipKey]: {
+        jabatan: p.position || prev[nipKey]?.jabatan || "",
+        pendidikanLama: prev[nipKey]?.pendidikanLama || "",
+        pendidikanTerakhir: prev[nipKey]?.pendidikanTerakhir || "",
+      }
+    }));
   };
 
   const removePegawai = (nip?: string) => {
@@ -50,12 +61,13 @@ export default function GeneratePengantarGelar() {
   };
 
   const setExtra = (nip: string, field: "jabatan" | "pendidikanLama" | "pendidikanTerakhir", value: string) => {
+    const nipKey = nip.replace(/\D+/g, "");
     setRowExtras((prev) => ({
       ...prev,
-      [nip]: {
-        jabatan: prev[nip]?.jabatan || "",
-        pendidikanLama: prev[nip]?.pendidikanLama || "",
-        pendidikanTerakhir: prev[nip]?.pendidikanTerakhir || "",
+      [nipKey]: {
+        jabatan: prev[nipKey]?.jabatan || "",
+        pendidikanLama: prev[nipKey]?.pendidikanLama || "",
+        pendidikanTerakhir: prev[nipKey]?.pendidikanTerakhir || "",
         [field]: value,
       },
     }));
@@ -196,13 +208,16 @@ export default function GeneratePengantarGelar() {
       perihal: "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS",
       addresseeJabatan: addresseeJabatan,
       addresseeKota: addresseeKota,
-      pegawaiData: pegawaiList.map(p => ({
-        name: p.name,
-        nip: p.nip,
-        position: p.position,
-        unit: p.unit,
-        ...rowExtras[p.nip || ""]
-      })),
+      pegawaiData: pegawaiList.map(p => {
+        const nipKey = (p.nip || "").replace(/\D+/g, "");
+        return {
+          name: p.name,
+          nip: p.nip,
+          position: p.position,
+          unit: p.unit,
+          ...rowExtras[nipKey]
+        };
+      }),
     }
     
     try {

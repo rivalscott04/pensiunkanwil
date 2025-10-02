@@ -57,7 +57,8 @@ export default function GeneratePengantarPensiun() {
 
   const [rowExtras, setRowExtras] = React.useState<Record<string, { gol: string; job: string; ket: string }>>({});
   const setExtra = (nip: string, field: "gol" | "job" | "ket", value: string) => {
-    setRowExtras((prev) => ({ ...prev, [nip]: { gol: prev[nip]?.gol || "", job: prev[nip]?.job || "", ket: prev[nip]?.ket || "", [field]: value } }));
+    const nipKey = nip.replace(/\D+/g, "");
+    setRowExtras((prev) => ({ ...prev, [nipKey]: { gol: prev[nipKey]?.gol || "", job: prev[nipKey]?.job || "", ket: prev[nipKey]?.ket || "", [field]: value } }));
   };
 
   const renderTanggalSurat = React.useMemo(() => {
