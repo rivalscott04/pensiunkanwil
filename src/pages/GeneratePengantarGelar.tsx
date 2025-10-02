@@ -14,7 +14,7 @@ import { saveLetterService, getLetterById } from "@/lib/letters-service";
 
 export default function GeneratePengantarGelar() {
   const url = new URL(window.location.href);
-  const editId = url.searchParams.get("edit");
+  const editId = url.searchParams.get("edit") ? decodeURIComponent(url.searchParams.get("edit")!) : null;
   const reprintId = url.searchParams.get("reprint");
 
   const [pejabat, setPejabat] = React.useState<Personnel | null>(null);

@@ -17,7 +17,7 @@ import { printFromContent } from "@/lib/print-helper";
 export default function CreateSurat() {
   const url = new URL(window.location.href);
   const reprintId = url.searchParams.get("reprint");
-  const editId = url.searchParams.get("edit");
+  const editId = url.searchParams.get("edit") ? decodeURIComponent(url.searchParams.get("edit")!) : null;
   const [printModalOpen, setPrintModalOpen] = React.useState<boolean>(false);
   const [errorModalOpen, setErrorModalOpen] = React.useState<boolean>(false);
   const [saving, setSaving] = React.useState<boolean>(false);

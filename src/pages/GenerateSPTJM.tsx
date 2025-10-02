@@ -16,7 +16,7 @@ import { getLetterById, listLettersByType, saveLetterService } from "@/lib/lette
 export default function GenerateSPTJM() {
   const url = new URL(window.location.href);
   const typeParam = (url.searchParams.get("type") || "").toLowerCase();
-  const editId = url.searchParams.get("edit");
+  const editId = url.searchParams.get("edit") ? decodeURIComponent(url.searchParams.get("edit")!) : null;
   type SptjmType = "gelar" | "pensiun";
   const [sptjmType, setSptjmType] = React.useState<SptjmType>((typeParam === "pensiun" || typeParam === "gelar") ? (typeParam as SptjmType) : "gelar");
 
