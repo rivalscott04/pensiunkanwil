@@ -209,12 +209,9 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
               <p><strong>Sebagai bahan kelengkapan, berikut ini dokumen terlampir:</strong></p>
               <div className="attachment-list">
                 <ol>
-                  <li>Foto copy SK CPNS</li>
-                  <li>Foto copy SK PNS</li>
-                  <li>Foto copy SK Kenaikan Pangkat Terakhir</li>
+                  <li>Surat Pertanggung Jawaban Mutlak (SPTJM)</li>
                   <li>Foto copy SK Tugas Belajar / Izin Belajar</li>
                   <li>Foto copy Ijazah dan Transkrip Nilai</li>
-                  <li>SKP 2 Tahun Terakhir</li>
                 </ol>
               </div>
             </div>
