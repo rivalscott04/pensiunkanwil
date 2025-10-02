@@ -39,7 +39,11 @@ export default function GeneratePengantarGelar() {
   const addPegawai = (p: Personnel | null) => {
     if (!p) return;
     setPegawaiList((prev) => {
-      if (prev.find((x) => x.nip === p.nip)) return prev;
+      // Check for exact NIP match
+      const exists = prev.find((x) => x.nip === p.nip);
+      if (exists) {
+        return prev;
+      }
       return [...prev, p];
     });
     
@@ -160,7 +164,11 @@ export default function GeneratePengantarGelar() {
         } as any)
         // Pegawai list and extras (support many rows)
         const arr: any[] = (letter as any).pegawaiData || []
-        const nextPegawai: Personnel[] = arr.map((r: any, idx: number) => ({
+        // Remove duplicates and filter out invalid entries
+        const uniqueData = arr.filter((r: any, index: number, self: any[]) => 
+          r && r.nip && self.findIndex(item => item.nip === r.nip) === index
+        )
+        const nextPegawai: Personnel[] = uniqueData.map((r: any, idx: number) => ({
           id: String(r.id ?? r.nip ?? idx + 1),
           name: r.name || r.nama || "",
           nip: r.nip || "",
@@ -169,7 +177,7 @@ export default function GeneratePengantarGelar() {
         }))
         setPegawaiList(nextPegawai)
         const extras: Record<string, { jabatan?: string; pendidikanLama: string; pendidikanTerakhir: string }> = {}
-        arr.forEach((r: any) => {
+        uniqueData.forEach((r: any) => {
           const nipKey = String(r.nip || "").replace(/\D+/g, "")
           extras[nipKey] = {
             jabatan: r.jabatan ?? r.position ?? "",
@@ -208,16 +216,20 @@ export default function GeneratePengantarGelar() {
       perihal: "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS",
       addresseeJabatan: addresseeJabatan,
       addresseeKota: addresseeKota,
-      pegawaiData: pegawaiList.map(p => {
-        const nipKey = (p.nip || "").replace(/\D+/g, "");
-        return {
-          name: p.name,
-          nip: p.nip,
-          position: p.position,
-          unit: p.unit,
-          ...rowExtras[nipKey]
-        };
-      }),
+      pegawaiData: pegawaiList
+        .filter((p, index, self) => 
+          p.nip && self.findIndex(item => item.nip === p.nip) === index
+        )
+        .map(p => {
+          const nipKey = (p.nip || "").replace(/\D+/g, "");
+          return {
+            name: p.name,
+            nip: p.nip,
+            position: p.position,
+            unit: p.unit,
+            ...rowExtras[nipKey]
+          };
+        }),
     }
     
     try {
