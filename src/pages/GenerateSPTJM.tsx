@@ -274,7 +274,7 @@ export default function GenerateSPTJM() {
       id: editId || "",
       nomorSurat: finalNomorSurat,
       tanggalSurat: (tanggalInput || new Date().toISOString().slice(0,10)),
-      namaPegawai: firstPegawai?.name || "",
+      namaPegawai: firstPegawai?.name || "-",
       nipPegawai: firstPegawai?.nip || "",
       posisiPegawai: firstPegawai?.position || "",
       unitPegawai: firstPegawai?.unit || "",
