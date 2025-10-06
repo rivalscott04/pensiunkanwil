@@ -30,6 +30,8 @@ export default function GenerateSPTJM() {
 
   const [tempat, setTempat] = React.useState("Mataram");
   const [tanggalInput, setTanggalInput] = React.useState<string>("");
+  const [signatureMode, setSignatureMode] = React.useState<"manual" | "tte">("manual");
+  const [signatureAnchor, setSignatureAnchor] = React.useState<"^" | "$" | "#">("^");
 
   React.useEffect(() => {
     setPerihalSuratRujukan((prev) => prev || (sptjmType === "gelar" ? "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS" : "Usul Pensiun BUP, J/D /KPP"));
@@ -120,13 +122,15 @@ export default function GenerateSPTJM() {
         const items = await listLettersByType(type)
         if (cancelled) return
         setLetterOptions(items.map(l => {
+          // Fallback tanggal: tanggalRujukan || tanggalSurat
+          const tanggalRaw = (l as any).tanggalRujukan || l.tanggalSurat
           // Tampilkan tanggal seperti di dokumen: "23 September 2025"
-          const tanggalFormatted = l.tanggalSurat ? renderTanggal(l.tanggalSurat) : l.tanggalSurat
+          const tanggalFormatted = tanggalRaw ? renderTanggal(tanggalRaw) : tanggalRaw
           return { 
             id: l.id, 
             label: `${l.nomorSurat} — ${tanggalFormatted}`, 
             nomor: l.nomorSurat, 
-            tanggal: l.tanggalSurat, 
+            tanggal: tanggalRaw, 
             perihal: undefined 
           }
         }))
@@ -164,6 +168,11 @@ export default function GenerateSPTJM() {
             }))
             setAtasNama(pegawaiList)
           }
+          // Strengthen fallback for tanggal rujukan and nomor from detail if needed
+          const nomorDetail = (letterDetail as any)?.nomorSurat || found.nomor
+          const tanggalDetail = (letterDetail as any)?.tanggalRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
+          setNomorSuratRujukan(nomorDetail || '')
+          setTanggalSuratRujukanInput(tanggalDetail || '')
         } catch (error) {
           console.error('Failed to load letter details:', error)
           // Keep existing atasNama if loading fails
@@ -234,7 +243,7 @@ export default function GenerateSPTJM() {
     }
 
     const payload: any = {
-      id: "",
+      id: editId || "",
       nomorSurat: finalNomorSurat,
       tanggalSurat: (tanggalInput || new Date().toISOString().slice(0,10)),
       namaPegawai: atasNama.length > 0 ? atasNama[0].name || "" : "",
@@ -246,8 +255,8 @@ export default function GenerateSPTJM() {
       jabatanPenandatangan: pejabat?.position || "",
       signaturePlace: tempat,
       signatureDateInput: (tanggalInput || new Date().toISOString().slice(0,10)),
-      signatureMode: "manual",
-      signatureAnchor: "^",
+      signatureMode,
+      signatureAnchor,
       type: sptjmType === "gelar" ? "sptjm_gelar" : "sptjm_pensiun",
       perihal: sptjmType === "gelar" ? "Surat Pernyataan Tanggung Jawab Mutlak Gelar" : "Surat Pernyataan Tanggung Jawab Mutlak Pensiun",
       nomorSuratRujukan: nomorSuratRujukan,
@@ -384,6 +393,32 @@ export default function GenerateSPTJM() {
                   <Input id="field-tanggalInput" type="date" value={tanggalInput} onChange={(e) => setTanggalInput(e.target.value)} />
                   {errors.tanggalInput && <div className="text-sm text-destructive">{errors.tanggalInput}</div>}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Tanda Tangan</Label>
+                  <Select value={signatureMode} onValueChange={(v: any) => setSignatureMode(v)}>
+                    <SelectTrigger><SelectValue placeholder="Pilih" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="tte">TTE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {signatureMode === "tte" && (
+                  <div>
+                    <Label>Anchor TTE</Label>
+                    <Select value={signatureAnchor} onValueChange={(v: any) => setSignatureAnchor(v)}>
+                      <SelectTrigger><SelectValue placeholder="Pilih anchor" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="^">^</SelectItem>
+                        <SelectItem value="$">$</SelectItem>
+                        <SelectItem value="#">#</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3">
