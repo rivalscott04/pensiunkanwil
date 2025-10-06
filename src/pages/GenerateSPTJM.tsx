@@ -108,6 +108,8 @@ export default function GenerateSPTJM() {
 
   // Atas Nama list for pensiun type
   const [atasNama, setAtasNama] = React.useState<Personnel[]>([]);
+  // For gelar type, keep first referenced pegawai from pengantar to satisfy API fields
+  const [refPegawai, setRefPegawai] = React.useState<Personnel | null>(null);
   // Dropdown letters state
   type LetterOption = { id: string; label: string; nomor: string; tanggal: string; perihal?: string };
   const [letterOptions, setLetterOptions] = React.useState<LetterOption[]>([]);
@@ -180,20 +182,25 @@ export default function GenerateSPTJM() {
         setNomorSuratRujukan(nomorDetail || '')
         setTanggalSuratRujukanInput(normalizeDateInput(tanggalDetail) || '')
 
-        // Load pegawai data from selected letter for pensiun type
-        if (sptjmType === 'pensiun') {
-          const pegawaiData = (letterDetail as any)?.pegawaiData as any[] | undefined
-          if (pegawaiData && Array.isArray(pegawaiData)) {
-            const pegawaiList: Personnel[] = pegawaiData.map((p: any, idx: number) => ({
-              id: String(p.id ?? p.nip ?? idx),
-              name: p.name || p.nama || '',
-              nip: p.nip || '',
-              position: p.position || p.posisi || p.jabatan || '',
-              unit: p.unit || p.unit_kerja || '',
-              golongan: p.golongan || p.gol || ''
-            }))
+        // Load pegawai data from selected letter (both types)
+        const pegawaiData = (letterDetail as any)?.pegawaiData as any[] | undefined
+        if (pegawaiData && Array.isArray(pegawaiData) && pegawaiData.length) {
+          const pegawaiList: Personnel[] = pegawaiData.map((p: any, idx: number) => ({
+            id: String(p.id ?? p.nip ?? idx),
+            name: p.name || p.nama || '',
+            nip: p.nip || '',
+            position: p.position || p.posisi || p.jabatan || '',
+            unit: p.unit || p.unit_kerja || '',
+            golongan: p.golongan || p.gol || ''
+          }))
+          if (sptjmType === 'pensiun') {
             setAtasNama(pegawaiList)
+            setRefPegawai(pegawaiList[0] || null)
+          } else {
+            setRefPegawai(null)
           }
+        } else {
+          setRefPegawai(null)
         }
       } catch (error) {
         console.error('Failed to load letter details:', error)
@@ -262,14 +269,15 @@ export default function GenerateSPTJM() {
       return
     }
 
+    const firstPegawai = sptjmType === 'pensiun' ? (atasNama.length > 0 ? atasNama[0] : refPegawai) : null
     const payload: any = {
       id: editId || "",
       nomorSurat: finalNomorSurat,
       tanggalSurat: (tanggalInput || new Date().toISOString().slice(0,10)),
-      namaPegawai: atasNama.length > 0 ? atasNama[0].name || "" : "",
-      nipPegawai: atasNama.length > 0 ? atasNama[0].nip || "" : "",
-      posisiPegawai: atasNama.length > 0 ? atasNama[0].position || "" : "",
-      unitPegawai: atasNama.length > 0 ? atasNama[0].unit || "" : "",
+      namaPegawai: firstPegawai?.name || "",
+      nipPegawai: firstPegawai?.nip || "",
+      posisiPegawai: firstPegawai?.position || "",
+      unitPegawai: firstPegawai?.unit || "",
       namaPenandatangan: pejabat?.name || "",
       nipPenandatangan: pejabat?.nip || "",
       jabatanPenandatangan: pejabat?.position || "",
