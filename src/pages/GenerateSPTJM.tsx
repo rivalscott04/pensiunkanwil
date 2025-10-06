@@ -146,18 +146,23 @@ export default function GenerateSPTJM() {
     setSelectedLetterId(id)
     const found = letterOptions.find(o => o.id === id)
     if (found) {
+      // Set from list first
       setNomorSuratRujukan(found.nomor)
-      // backend uses yyyy-mm-dd; keep as is for our renderer
       setTanggalSuratRujukanInput(found.tanggal)
       if (!perihalSuratRujukan) setPerihalSuratRujukan(sptjmType === 'gelar' ? 'Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS' : 'Usul Pensiun BUP, J/D /KPP')
-      
-      // Load pegawai data from selected letter for pensiun type
-      if (sptjmType === 'pensiun') {
-        try {
-          const letterDetail = await getLetterById(id)
+
+      // Always fetch detail to ensure we get latest nomor & tanggal (tanggalRujukan || tanggalSurat)
+      try {
+        const letterDetail = await getLetterById(id)
+        const nomorDetail = (letterDetail as any)?.nomorSurat || found.nomor
+        const tanggalDetail = (letterDetail as any)?.tanggalRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
+        setNomorSuratRujukan(nomorDetail || '')
+        setTanggalSuratRujukanInput(tanggalDetail || '')
+
+        // Load pegawai data from selected letter for pensiun type
+        if (sptjmType === 'pensiun') {
           const pegawaiData = (letterDetail as any)?.pegawaiData as any[] | undefined
           if (pegawaiData && Array.isArray(pegawaiData)) {
-            // Convert pegawaiData to Personnel format
             const pegawaiList: Personnel[] = pegawaiData.map((p: any, idx: number) => ({
               id: String(p.id ?? p.nip ?? idx),
               name: p.name || p.nama || '',
@@ -168,15 +173,9 @@ export default function GenerateSPTJM() {
             }))
             setAtasNama(pegawaiList)
           }
-          // Strengthen fallback for tanggal rujukan and nomor from detail if needed
-          const nomorDetail = (letterDetail as any)?.nomorSurat || found.nomor
-          const tanggalDetail = (letterDetail as any)?.tanggalRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
-          setNomorSuratRujukan(nomorDetail || '')
-          setTanggalSuratRujukanInput(tanggalDetail || '')
-        } catch (error) {
-          console.error('Failed to load letter details:', error)
-          // Keep existing atasNama if loading fails
         }
+      } catch (error) {
+        console.error('Failed to load letter details:', error)
       }
     }
   }

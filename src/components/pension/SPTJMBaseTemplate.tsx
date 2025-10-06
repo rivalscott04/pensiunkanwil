@@ -58,6 +58,7 @@ export const SPTJMBaseTemplate: React.FC<SPTJMBaseProps> = (props) => {
         .signature-block { text-align: center; min-width: 250px; }
         .signature-date { margin-bottom: 10px; }
         .signature-title { margin-bottom: 60px; }
+        .signature-anchor { margin: 6px 0 24px 0; font-weight: bold; color: black; }
         .signature-name { font-weight: bold; text-decoration: underline; }
       `}</style>
 
@@ -96,6 +97,7 @@ export const SPTJMBaseTemplate: React.FC<SPTJMBaseProps> = (props) => {
           <div className="signature-block">
             <div className="signature-date">{tempat}{tempat && tanggalText ? ", " : ""}{tanggalText}</div>
             <div className="signature-title">Yang Membuat Pernyataan,</div>
+            {signatureMode === "tte" ? (<div className="signature-anchor">{signatureAnchor}</div>) : null}
             <div className="signature-name">{namaPenandatangan}</div>
           </div>
         </div>
