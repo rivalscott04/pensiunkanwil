@@ -114,6 +114,26 @@ export default function GenerateSPTJM() {
   const [selectedLetterId, setSelectedLetterId] = React.useState<string>("");
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
+  // Normalize service date string to input type="date" (yyyy-mm-dd)
+  const normalizeDateInput = React.useCallback((val?: string | null) => {
+    const v = (val || "").trim()
+    if (!v) return ""
+    // already yyyy-mm-dd
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(v)) {
+      const [yyyy, m, d] = v.split('-')
+      return `${yyyy}-${String(parseInt(m,10)).padStart(2,'0')}-${String(parseInt(d,10)).padStart(2,'0')}`
+    }
+    // dd/mm/yyyy from DB/service
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v)) {
+      const [dd, mm, yyyy] = v.split('/')
+      return `${yyyy}-${String(parseInt(mm,10)).padStart(2,'0')}-${String(parseInt(dd,10)).padStart(2,'0')}`
+    }
+    // Fallback: try Date parsing
+    const d = new Date(v)
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0,10)
+    return ""
+  }, [])
+
   React.useEffect(() => {
     let cancelled = false
     const load = async () => {
@@ -124,13 +144,14 @@ export default function GenerateSPTJM() {
         setLetterOptions(items.map(l => {
           // Fallback tanggal: tanggalSuratRujukan || tanggalSurat
           const tanggalRaw = (l as any).tanggalSuratRujukan || l.tanggalSurat
+          const tanggalValue = normalizeDateInput(tanggalRaw)
           // Tampilkan tanggal seperti di dokumen: "23 September 2025"
-          const tanggalFormatted = tanggalRaw ? renderTanggal(tanggalRaw) : tanggalRaw
+          const tanggalFormatted = tanggalValue ? renderTanggal(tanggalValue) : tanggalValue
           return { 
             id: l.id, 
             label: `${l.nomorSurat} — ${tanggalFormatted}`, 
             nomor: l.nomorSurat, 
-            tanggal: tanggalRaw, 
+            tanggal: tanggalValue, 
             perihal: undefined 
           }
         }))
@@ -157,7 +178,7 @@ export default function GenerateSPTJM() {
         const nomorDetail = (letterDetail as any)?.nomorSurat || found.nomor
         const tanggalDetail = (letterDetail as any)?.tanggalSuratRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
         setNomorSuratRujukan(nomorDetail || '')
-        setTanggalSuratRujukanInput(tanggalDetail || '')
+        setTanggalSuratRujukanInput(normalizeDateInput(tanggalDetail) || '')
 
         // Load pegawai data from selected letter for pensiun type
         if (sptjmType === 'pensiun') {
