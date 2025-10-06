@@ -122,8 +122,8 @@ export default function GenerateSPTJM() {
         const items = await listLettersByType(type)
         if (cancelled) return
         setLetterOptions(items.map(l => {
-          // Fallback tanggal: tanggalRujukan || tanggalSurat
-          const tanggalRaw = (l as any).tanggalRujukan || l.tanggalSurat
+          // Fallback tanggal: tanggalSuratRujukan || tanggalSurat
+          const tanggalRaw = (l as any).tanggalSuratRujukan || l.tanggalSurat
           // Tampilkan tanggal seperti di dokumen: "23 September 2025"
           const tanggalFormatted = tanggalRaw ? renderTanggal(tanggalRaw) : tanggalRaw
           return { 
@@ -155,7 +155,7 @@ export default function GenerateSPTJM() {
       try {
         const letterDetail = await getLetterById(id)
         const nomorDetail = (letterDetail as any)?.nomorSurat || found.nomor
-        const tanggalDetail = (letterDetail as any)?.tanggalRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
+        const tanggalDetail = (letterDetail as any)?.tanggalSuratRujukan || (letterDetail as any)?.tanggalSurat || found.tanggal
         setNomorSuratRujukan(nomorDetail || '')
         setTanggalSuratRujukanInput(tanggalDetail || '')
 
@@ -448,6 +448,8 @@ export default function GenerateSPTJM() {
                         perihalSuratRujukan={perihalSuratRujukan || "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS"}
                         tempat={tempat}
                         tanggalText={tanggalText}
+                        signatureMode={signatureMode}
+                        signatureAnchor={signatureAnchor}
                       />
                     ) : (
                       <SPTJMTemplatePensiun
@@ -462,6 +464,8 @@ export default function GenerateSPTJM() {
                         atasNama={atasNama.map(p => ({ nama: p.name, nip: p.nip }))}
                         tempat={tempat}
                         tanggalText={tanggalText}
+                        signatureMode={signatureMode}
+                        signatureAnchor={signatureAnchor}
                       />
                     )}
                   </div>
