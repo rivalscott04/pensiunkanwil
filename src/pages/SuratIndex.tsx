@@ -3,6 +3,8 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { LettersDataTable } from "@/components/pension/letters-data-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { KemenagDocumentTemplate } from "@/components/pension/KemenagDocumentTemplate"
+import { SPTJMTemplateGelar } from "@/components/pension/SPTJMTemplateGelar"
+import { SPTJMTemplatePensiun } from "@/components/pension/SPTJMTemplatePensiun"
 import { listLetters, deleteLetterService } from "@/lib/letters-service"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
@@ -10,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { GraduationCap, Briefcase, FileSignature, FileText, Search, Copy, Check } from "lucide-react"
-import { printFromContent } from "@/lib/print-helper"
+import { printFromElement, printFromContent } from "@/lib/print-helper"
 
 export default function SuratIndex() {
   const [pickerOpen, setPickerOpen] = React.useState(false)
@@ -433,13 +435,19 @@ export default function SuratIndex() {
     printFromContent(printContent, "Surat Hukuman Disiplin - Print");
   }
 
+  const handleOpenPrint = (item: any) => {
+    setPrintLetterId(item?.id || null)
+    setViewLetterId(null)
+    setPrintOpen(true)
+  }
+
   const handlePrintNow = () => {
     if (!letter) {
       console.error('No letter selected for printing')
       return
     }
-    
-    handlePrintWithItem(letter)
+    // Print the exact DOM preview to ensure identical PDF output
+    printFromElement('surat-print-area-index', 'Cetak Surat')
   }
 
   const handleCopy = async (text: string, field: string) => {
@@ -508,41 +516,91 @@ export default function SuratIndex() {
             await deleteLetterService(item.id)
             setLetters((prev) => prev.filter((x) => x.id !== item.id))
           }}
-          onPrint={(item) => { handlePrintWithItem(item) }}
+          onPrint={(item) => { handleOpenPrint(item) }}
         />
 
         <Dialog open={printOpen} onOpenChange={setPrintOpen}>
-          <DialogContent className="max-w-[860px]">
+          <DialogContent className="max-w-[860px] max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Cetak Surat</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="border rounded bg-white overflow-auto">
+            <div className="flex-1 overflow-hidden flex flex-col space-y-4">
+              <div className="flex-1 border rounded bg-white overflow-auto">
                 <div className="min-w-[800px]">
                   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css" />
                   <div id="surat-print-area-index">
-                    {letter && (
-                      <KemenagDocumentTemplate
-                        logoUrl="/logo-kemenag.png"
-                        documentNumberPage1={documentNumberPage}
-                        documentNumberPage2={documentNumberPage}
-                        signatoryName={letter.namaPenandatangan}
-                        signatoryNip={letter.nipPenandatangan}
-                        signatoryPosition={letter.jabatanPenandatangan}
-                        subjectName={letter.namaPegawai}
-                        subjectNip={letter.nipPegawai}
-                        subjectPosition={letter.posisiPegawai}
-                        subjectAgency={letter.unitPegawai}
-                        signaturePlace={letter.signaturePlace}
-                        signatureDate={signatureDate}
-                        signatureMode={letter.signatureMode}
-                        signatureAnchor={letter.signatureAnchor}
-                      />
-                    )}
+                    {letter && (() => {
+                      const letterType = (letter as any)?.type || ""
+                      
+                      if (letterType === 'sptjm_gelar') {
+                        return (
+                          <SPTJMTemplateGelar
+                            logoUrl="/logo-kemenag.png"
+                            nomorSurat={letter.nomorSurat}
+                            namaPenandatangan={letter.namaPenandatangan}
+                            nipPenandatangan={letter.nipPenandatangan}
+                            jabatanPenandatangan={letter.jabatanPenandatangan}
+                            tempat={letter.signaturePlace}
+                            tanggalText={signatureDate}
+                            signatureMode={letter.signatureMode}
+                            signatureAnchor={letter.signatureAnchor}
+                            nomorSuratRujukan={(letter as any).nomorSuratRujukan || ""}
+                            tanggalSuratRujukanText={(letter as any).tanggalSuratRujukanText || ""}
+                            perihalSuratRujukan={(letter as any).perihalSuratRujukan || ""}
+                          />
+                        )
+                      }
+                      
+                      if (letterType === 'sptjm_pensiun') {
+                        const pegawaiData = (letter as any)?.pegawaiData || []
+                        const atasNama = pegawaiData.map((p: any) => ({
+                          nama: p.name || p.nama || "",
+                          nip: p.nip || ""
+                        }))
+                        
+                        return (
+                          <SPTJMTemplatePensiun
+                            logoUrl="/logo-kemenag.png"
+                            nomorSurat={letter.nomorSurat}
+                            namaPenandatangan={letter.namaPenandatangan}
+                            nipPenandatangan={letter.nipPenandatangan}
+                            jabatanPenandatangan={letter.jabatanPenandatangan}
+                            tempat={letter.signaturePlace}
+                            tanggalText={signatureDate}
+                            signatureMode={letter.signatureMode}
+                            signatureAnchor={letter.signatureAnchor}
+                            nomorSuratRujukan={(letter as any).nomorSuratRujukan || ""}
+                            tanggalSuratRujukanText={(letter as any).tanggalSuratRujukanText || ""}
+                            perihalSuratRujukan={(letter as any).perihalSuratRujukan || ""}
+                            atasNama={atasNama}
+                          />
+                        )
+                      }
+                      
+                      // Default to KemenagDocumentTemplate for hukuman_disiplin and other types
+                      return (
+                        <KemenagDocumentTemplate
+                          logoUrl="/logo-kemenag.png"
+                          documentNumberPage1={letter.nomorSurat}
+                          documentNumberPage2={letter.nomorSurat}
+                          signatoryName={letter.namaPenandatangan}
+                          signatoryNip={letter.nipPenandatangan}
+                          signatoryPosition={letter.jabatanPenandatangan}
+                          subjectName={letter.namaPegawai}
+                          subjectNip={letter.nipPegawai}
+                          subjectPosition={letter.posisiPegawai}
+                          subjectAgency={letter.unitPegawai}
+                          signaturePlace={letter.signaturePlace}
+                          signatureDate={signatureDate}
+                          signatureMode={letter.signatureMode}
+                          signatureAnchor={letter.signatureAnchor}
+                        />
+                      )
+                    })()}
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3 justify-end flex-shrink-0">
                 <button className="px-4 py-2 border rounded" onClick={() => setPrintOpen(false)}>Tutup</button>
                 <button className="px-4 py-2 bg-primary text-primary-foreground rounded" onClick={handlePrintNow}>Print / Download PDF</button>
               </div>

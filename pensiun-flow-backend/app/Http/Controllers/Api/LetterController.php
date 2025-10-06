@@ -72,10 +72,14 @@ class LetterController extends Controller
             $nomorUnique .= ",{$id},id";
         }
 
+        // For sptjm_gelar type, nama_pegawai is nullable since it uses pegawai_data instead
+        $type = $request->input('type');
+        $namaPegawaiRule = ($type === 'sptjm_gelar') ? ['nullable', 'string'] : ['required', 'string'];
+
         return $request->validate([
             'nomor_surat' => [ 'required', 'string', $nomorUnique ],
             'tanggal_surat' => [ 'required', 'date' ],
-            'nama_pegawai' => [ 'required', 'string' ],
+            'nama_pegawai' => $namaPegawaiRule,
             'nip_pegawai' => [ 'nullable', 'string' ],
             'posisi_pegawai' => [ 'nullable', 'string' ],
             'unit_pegawai' => [ 'nullable', 'string' ],

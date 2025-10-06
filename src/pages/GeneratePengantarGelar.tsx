@@ -197,6 +197,21 @@ export default function GeneratePengantarGelar() {
   }, [editId, reprintId])
 
   const handleSave = async () => {
+    const pegawaiDataToSave = pegawaiList
+      .filter((p, index, self) => 
+        p.nip && self.findIndex(item => item.nip === p.nip) === index
+      )
+      .map(p => {
+        const nipKey = (p.nip || "").replace(/\D+/g, "");
+        return {
+          name: p.name,
+          nip: p.nip,
+          position: p.position,
+          unit: p.unit,
+          ...rowExtras[nipKey]
+        };
+      });
+
     const payload: any = {
       id: editId || "",
       nomorSurat: finalNomorSurat,
@@ -216,20 +231,7 @@ export default function GeneratePengantarGelar() {
       perihal: "Pengakuan dan Penyematan Gelar Pendidikan Terakhir PNS",
       addresseeJabatan: addresseeJabatan,
       addresseeKota: addresseeKota,
-      pegawaiData: pegawaiList
-        .filter((p, index, self) => 
-          p.nip && self.findIndex(item => item.nip === p.nip) === index
-        )
-        .map(p => {
-          const nipKey = (p.nip || "").replace(/\D+/g, "");
-          return {
-            name: p.name,
-            nip: p.nip,
-            position: p.position,
-            unit: p.unit,
-            ...rowExtras[nipKey]
-          };
-        }),
+      pegawaiData: pegawaiDataToSave,
     }
     
     try {
@@ -367,7 +369,7 @@ export default function GeneratePengantarGelar() {
 
               {pegawaiList.length > 0 && (
                 <div className="border rounded bg-background text-foreground">
-                  <div className="px-4 py-2 font-semibold">Daftar Pegawai</div>
+                  <div className="px-4 py-2 font-semibold">Daftar Pegawai ({pegawaiList.length} orang)</div>
                   <div className="p-4 overflow-auto">
                     <table className="min-w-[800px] w-full text-sm text-foreground">
                       <thead>
