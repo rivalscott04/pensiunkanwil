@@ -701,10 +701,10 @@ For more information, see https://radix-ui.com/primitives/docs/components/alert-
           margin-top: 1.5cm; 
         }
         @page :left { 
-          margin-top: 2.5cm; 
+          margin-top: 1.5cm; 
         }
         @page :right { 
-          margin-top: 2.5cm; 
+          margin-top: 1.5cm; 
         }
         html, body { 
           margin: 0; 
@@ -736,6 +736,11 @@ For more information, see https://radix-ui.com/primitives/docs/components/alert-
         }
         .sheet:last-child { 
           page-break-after: auto; 
+        }
+        
+        /* Specific styling for page 2 and beyond */
+        .sheet:not(:first-child) {
+          padding-top: 0;
         }
         .header { 
           margin-bottom: 20px; 
@@ -960,10 +965,69 @@ For more information, see https://radix-ui.com/primitives/docs/components/alert-
             margin: 1.5cm 1cm 1.5cm 1cm !important; 
           }
           
+          /* Specific margins for page 2 and beyond */
+          @page :left { 
+            margin-top: 1.5cm !important; 
+            margin-bottom: 1.5cm !important;
+          }
+          @page :right { 
+            margin-top: 1.5cm !important; 
+            margin-bottom: 1.5cm !important;
+          }
+          
           /* Better text handling for print */
           .data-table td { 
             padding: 12px 8px !important;
             line-height: 1.4 !important;
+          }
+          
+          /* Specific handling for page 2 and beyond */
+          .sheet:not(:first-child) {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+          }
+          
+          /* Better spacing for content on page 2+ */
+          .sheet:not(:first-child) .content-wrapper {
+            padding-top: 0 !important;
+          }
+          
+          /* Ensure proper spacing for table on page 2+ */
+          .sheet:not(:first-child) .data-table {
+            margin-top: 10px !important;
+          }
+          
+          /* Better page break handling for page 2+ */
+          .sheet:not(:first-child) .data-table tbody tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          
+          /* Ensure proper text spacing on page 2+ */
+          .sheet:not(:first-child) .data-table td {
+            padding: 12px 8px !important;
+            line-height: 1.4 !important;
+            word-wrap: break-word !important;
+          }
+          
+          /* Better column handling for page 2+ */
+          .sheet:not(:first-child) .data-table {
+            table-layout: fixed !important;
+            width: 100% !important;
+          }
+          
+          /* Specific column widths for page 2+ */
+          .sheet:not(:first-child) .number-col { 
+            width: 50px !important; 
+          }
+          .sheet:not(:first-child) .name-col { 
+            width: 220px !important; 
+          }
+          .sheet:not(:first-child) .position-col { 
+            width: 200px !important; 
+          }
+          .sheet:not(:first-child) .education-col { 
+            width: 160px !important; 
           }
         }
       `}),r.jsxs("section",{className:"sheet",children:[r.jsxs("div",{className:"header",children:[m?r.jsx("img",{src:m,alt:"Logo Kementerian Agama",className:"logo"}):r.jsx("div",{className:"logo"}),r.jsxs("div",{className:"header-text",children:["KEMENTERIAN AGAMA REPUBLIK INDONESIA",r.jsx("br",{}),"KANTOR WILAYAH KEMENTERIAN AGAMA",r.jsx("br",{}),"PROVINSI NUSA TENGGARA BARAT"]}),r.jsxs("div",{className:"header-info",children:["Jalan Udayana No. 6 Mataram Telp. (0370) 633040; Fax. (0370) 622317",r.jsx("br",{}),"Website: www.ntb.kemenag.go.id email: updepagntb@gmail.com"]})]}),r.jsxs("div",{className:"content-wrapper",children:[r.jsxs("div",{className:"doc-header",children:[r.jsxs("div",{className:"document-info",children:[r.jsxs("div",{className:"info-row",children:[r.jsx("div",{className:"info-label",children:"Nomor"}),r.jsx("div",{className:"info-colon",children:":"}),r.jsx("div",{className:"info-value",children:n})]}),r.jsxs("div",{className:"info-row",children:[r.jsx("div",{className:"info-label",children:"Lamp."}),r.jsx("div",{className:"info-colon",children:":"}),r.jsx("div",{className:"info-value",children:a})]}),r.jsxs("div",{className:"info-row",children:[r.jsx("div",{className:"info-label",children:"Perihal"}),r.jsx("div",{className:"info-colon",children:":"}),r.jsxs("div",{className:"info-value",children:["Pengakuan dan Penyematan Gelar",r.jsx("br",{}),"Pendidikan Terakhir PNS"]})]})]}),r.jsx("div",{className:"document-date",children:s})]}),r.jsx("div",{className:"addressee",children:r.jsxs("p",{children:["Yth. ",r.jsx("span",{dangerouslySetInnerHTML:{__html:i}})]})}),r.jsxs("div",{className:"content",children:[r.jsx("p",{children:"Bersama ini kami sampaikan bahan usul pengakuan dan penyematan gelar pendidikan terakhir PNS dilingkungan Kantor Wilayah Kementerian Agama Provinsi NTB yang namanya tercantum dibawah ini, untuk mendapatkan penyelesaian sebagai berikut :"}),r.jsxs("table",{className:"data-table",children:[r.jsx("thead",{children:r.jsxs("tr",{children:[r.jsx("th",{className:"number-col",children:"No"}),r.jsx("th",{className:"name-col",children:"Nama / NIP"}),r.jsx("th",{className:"position-col",children:"Jabatan"}),r.jsx("th",{className:"education-col",children:"Pendidikan Lama"}),r.jsx("th",{className:"education-col",children:"Pendidikan Terakhir"})]})}),r.jsx("tbody",{children:f.map(g=>r.jsxs("tr",{children:[r.jsx("td",{className:"number-col",children:g.nomor}),r.jsxs("td",{className:"name-col",children:[r.jsx("strong",{children:g.nama}),r.jsx("br",{}),"NIP. ",w(g.nip)]}),r.jsx("td",{className:"position-col",children:g.jabatan}),r.jsx("td",{className:"education-col",children:g.pendidikanLama}),r.jsx("td",{className:"education-col",children:g.pendidikanTerakhir})]},`${g.nomor}-${g.nip}`))}),r.jsx("tfoot",{className:"spacer",children:r.jsx("tr",{children:r.jsx("td",{colSpan:5,style:{border:"none",padding:"8px 0"}})})})]}),r.jsxs("div",{className:"attachment-section",children:[r.jsx("p",{children:r.jsx("strong",{children:"Sebagai bahan kelengkapan, berikut ini dokumen terlampir:"})}),r.jsx("div",{className:"attachment-list",children:r.jsxs("ol",{children:[r.jsx("li",{children:"Surat Pertanggung Jawaban Mutlak (SPTJM)"}),r.jsx("li",{children:"Foto copy SK Tugas Belajar / Izin Belajar"}),r.jsx("li",{children:"Foto copy Ijazah dan Transkrip Nilai"})]})})]}),r.jsx("p",{children:"Demikian untuk maklum dan atas penyelesainnya disampaikan terima kasih."})]}),r.jsx("div",{className:"signature-section",children:r.jsxs("div",{className:"signature-block",children:[r.jsx("div",{className:"signature-date",children:u}),r.jsx("div",{className:"signature-title",children:"Kepala,"}),h==="tte"?r.jsx("div",{className:"signature-anchor",children:p}):null,r.jsx("div",{className:"signature-name",children:l}),r.jsxs("div",{className:"signature-nip",children:["NIP.",w(c)]})]})})]})]})]})},tE=e=>{const{logoUrl:t="",nomorSurat:n="",lampiran:a="-",tanggalSuratText:s="",addresseeText:i="Sekretaris Jenderal Kementerian Agama RI<br />Up. Kepala Biro SDM<br />Jakarta",tempatTanggalText:o="",rows:l=[],signatureMode:c="manual",signatureAnchor:u="^",penandatanganNama:f="",penandatanganNip:h=""}=e,p=d.useMemo(()=>{if(!t)return"";try{return new URL(t,window.location.origin).toString()}catch{return t}},[t]),m=d.useCallback(w=>(w||"").replace(/\D+/g,""),[]);return r.jsxs("div",{className:"w-full bg-white text-black",children:[r.jsx("style",{children:`

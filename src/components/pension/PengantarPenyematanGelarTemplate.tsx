@@ -63,10 +63,10 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
           margin-top: 1.5cm; 
         }
         @page :left { 
-          margin-top: 2.5cm; 
+          margin-top: 1.5cm; 
         }
         @page :right { 
-          margin-top: 2.5cm; 
+          margin-top: 1.5cm; 
         }
         html, body { 
           margin: 0; 
@@ -98,6 +98,11 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         }
         .sheet:last-child { 
           page-break-after: auto; 
+        }
+        
+        /* Specific styling for page 2 and beyond */
+        .sheet:not(:first-child) {
+          padding-top: 0;
         }
         .header { 
           margin-bottom: 20px; 
@@ -322,10 +327,69 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
             margin: 1.5cm 1cm 1.5cm 1cm !important; 
           }
           
+          /* Specific margins for page 2 and beyond */
+          @page :left { 
+            margin-top: 1.5cm !important; 
+            margin-bottom: 1.5cm !important;
+          }
+          @page :right { 
+            margin-top: 1.5cm !important; 
+            margin-bottom: 1.5cm !important;
+          }
+          
           /* Better text handling for print */
           .data-table td { 
             padding: 12px 8px !important;
             line-height: 1.4 !important;
+          }
+          
+          /* Specific handling for page 2 and beyond */
+          .sheet:not(:first-child) {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+          }
+          
+          /* Better spacing for content on page 2+ */
+          .sheet:not(:first-child) .content-wrapper {
+            padding-top: 0 !important;
+          }
+          
+          /* Ensure proper spacing for table on page 2+ */
+          .sheet:not(:first-child) .data-table {
+            margin-top: 10px !important;
+          }
+          
+          /* Better page break handling for page 2+ */
+          .sheet:not(:first-child) .data-table tbody tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          
+          /* Ensure proper text spacing on page 2+ */
+          .sheet:not(:first-child) .data-table td {
+            padding: 12px 8px !important;
+            line-height: 1.4 !important;
+            word-wrap: break-word !important;
+          }
+          
+          /* Better column handling for page 2+ */
+          .sheet:not(:first-child) .data-table {
+            table-layout: fixed !important;
+            width: 100% !important;
+          }
+          
+          /* Specific column widths for page 2+ */
+          .sheet:not(:first-child) .number-col { 
+            width: 50px !important; 
+          }
+          .sheet:not(:first-child) .name-col { 
+            width: 220px !important; 
+          }
+          .sheet:not(:first-child) .position-col { 
+            width: 200px !important; 
+          }
+          .sheet:not(:first-child) .education-col { 
+            width: 160px !important; 
           }
         }
       `}</style>
