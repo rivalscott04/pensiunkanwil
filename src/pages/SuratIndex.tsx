@@ -189,6 +189,28 @@ export default function SuratIndex() {
   }, [letter?.signatureDateInput])
 
   const handlePrintWithItem = (item: any) => {
+    // Input validation to ensure complete data before printing
+    const missingFields: string[] = []
+    
+    if (!item.nomorSurat?.trim()) missingFields.push('Nomor Surat')
+    if (!item.namaPenandatangan?.trim()) missingFields.push('Nama Penandatangan')
+    if (!item.nipPenandatangan?.trim()) missingFields.push('NIP Penandatangan')
+    if (!item.jabatanPenandatangan?.trim()) missingFields.push('Jabatan Penandatangan')
+    if (!item.signatureDateInput?.trim()) missingFields.push('Tanggal Surat')
+    
+    // Additional validation for employee data
+    const pegawaiData = (item as any)?.pegawaiData || []
+    const hasEmployeeData = pegawaiData.length > 0 || item.namaPegawai?.trim()
+    
+    if (!hasEmployeeData) {
+      missingFields.push('Data Pegawai')
+    }
+    
+    if (missingFields.length > 0) {
+      alert(`Data surat tidak lengkap. Harap lengkapi: ${missingFields.join(', ')}`)
+      return
+    }
+
     const base = `${window.location.origin}`
 
     const formatSignatureDate = (signatureDateInput: string) => {
@@ -207,7 +229,8 @@ export default function SuratIndex() {
     const type = (item as any)?.type || ""
 
     // For non-hukdis types, render a lightweight per-type summary template inline to avoid redirecting to edit forms
-    if (type && type !== 'hukuman_disiplin') {
+    // Check for specific types that should use their own templates
+    if (type === 'pengantar_gelar' || type === 'pengantar_pensiun' || type === 'sptjm_gelar' || type === 'sptjm_pensiun' || type === 'surat_meninggal') {
       const buildRow = (label: string, value?: string) => `<div class=\"data-row\"><div class=\"data-label\">${label}</div><div class=\"data-colon\">:</div><div class=\"data-value\">${value || ''}</div></div>`
       const commonStyles = `
         <style>
@@ -233,12 +256,16 @@ export default function SuratIndex() {
         </style>`
 
       let title = 'SURAT'
-      if (type === 'pengantar_gelar') title = 'SURAT PENGANTAR PENYEMATAN GELAR'
-      if (type === 'pengantar_pensiun') title = 'SURAT PENGANTAR PENSIUN'
-      if (type === 'sptjm_gelar' || type === 'sptjm_pensiun') title = 'SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK'
+      if (type === 'pengantar_gelar') title = 'SURAT PENGANTAR PENGAKUAN DAN PENYEMATAN GELAR PENDIDIKAN TERAKHIR PNS'
+      if (type === 'pengantar_pensiun') title = 'SURAT PENGANTAR USUL PENSIUN'
+      if (type === 'sptjm_gelar') title = 'SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK (PENGANTAR GELAR)'
+      if (type === 'sptjm_pensiun') title = 'SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK (PENGANTAR PENSIUN)'
       if (type === 'surat_meninggal') title = 'SURAT KETERANGAN MENINGGAL DUNIA'
 
       const firstRow = ((item as any)?.pegawaiData || [])[0] || {}
+      const pegawaiCount = ((item as any)?.pegawaiData || []).length
+      const pegawaiName = firstRow.name || firstRow.nama || item.namaPegawai || ""
+      const displayPegawai = pegawaiCount > 1 ? `${pegawaiName} dkk. (${pegawaiCount} orang)` : pegawaiName
 
       const html = `
         <div class=\"w-full bg-white text-black\">
@@ -254,12 +281,13 @@ export default function SuratIndex() {
             <div class=\"content-wrapper\">
               <div class=\"title\">${title}</div>
               <div class=\"document-number\">Nomor : ${documentNumberPage}</div>
-              ${buildRow('Penandatangan', item.namaPenandatangan)}
+              ${buildRow('Penandatangan', item.namaPenandatangan || '')}
               ${buildRow('NIP Penandatangan', (item.nipPenandatangan || '').replace(/\\D+/g, ''))}
               <div class=\"title\" style=\"text-align:left; font-weight:600; margin-top:12px\">Data Pegawai</div>
-              ${buildRow('Nama', firstRow.name || item.namaPegawai)}
+              ${buildRow('Nama', displayPegawai)}
               ${buildRow('NIP', (firstRow.nip || item.nipPegawai || '').replace(/\\D+/g, ''))}
               ${buildRow('Unit/Jabatan', firstRow.unit || firstRow.position || item.unitPegawai || item.posisiPegawai)}
+              ${pegawaiCount > 1 ? buildRow('Jumlah Pegawai', `${pegawaiCount} orang`) : ''}
               <div class=\"signature-section\">
                 <div class=\"signature-inner\">
                   <div>${item.signaturePlace || ''}${item.signaturePlace && item.signatureDateInput ? ', ' : ''}${formatSignatureDate(item.signatureDateInput || '')}</div>
