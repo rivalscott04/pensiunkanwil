@@ -55,22 +55,72 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
   return (
     <div className="w-full bg-white text-black">
       <style>{`
-        @page { size: auto; margin: 0; }
-        @page :first { margin-top: 0; }
-        @page :left { margin-top: 2.5cm; }
-        @page :right { margin-top: 2.5cm; }
-        html, body { margin: 0; padding: 0; }
-        @media print { 
-          body { -webkit-print-color-adjust: exact; margin: 0 !important; } 
-          .sheet { padding: 1.5cm 2cm; page-break-after: always; }
-          .sheet:first-child { padding-top: 1.5cm; }
-          .sheet:not(:first-child) { padding-top: 2.5cm; }
+        @page { 
+          size: A4; 
+          margin: 2cm 1.5cm 2cm 1.5cm; 
         }
-        .sheet { padding: 1.5cm 2cm; page-break-after: always; }
-        .sheet:last-child { page-break-after: auto; }
-        .header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid black; overflow: hidden; }
+        @page :first { 
+          margin-top: 1.5cm; 
+        }
+        @page :left { 
+          margin-top: 2.5cm; 
+        }
+        @page :right { 
+          margin-top: 2.5cm; 
+        }
+        html, body { 
+          margin: 0; 
+          padding: 0; 
+        }
         @media print { 
-          .sheet:first-child { padding-top: 1cm !important; }
+          body { 
+            -webkit-print-color-adjust: exact; 
+            margin: 0 !important; 
+            font-size: 12pt;
+            line-height: 1.4;
+          } 
+          .sheet { 
+            padding: 0; 
+            page-break-after: always; 
+            min-height: 100vh;
+          }
+          .sheet:first-child { 
+            padding-top: 0; 
+          }
+          .sheet:not(:first-child) { 
+            padding-top: 0; 
+          }
+        }
+        .sheet { 
+          padding: 0; 
+          page-break-after: always; 
+          min-height: 100vh;
+        }
+        .sheet:last-child { 
+          page-break-after: auto; 
+        }
+        .header { 
+          margin-bottom: 20px; 
+          padding-bottom: 12px; 
+          border-bottom: 3px solid black; 
+          overflow: hidden; 
+        }
+        
+        .content-wrapper {
+          padding: 0 1cm;
+        }
+        
+        @media print { 
+          .content-wrapper {
+            padding: 0;
+          }
+          .sheet:first-child { 
+            padding-top: 0 !important; 
+          }
+          /* Better page margins for print */
+          @page { 
+            margin: 1.5cm 1cm 1.5cm 1cm !important; 
+          }
         }
         .logo { float: left; width: 100px; height: 100px; margin-right: 15px; object-fit: contain; }
         .header-text { font-size: 13pt; font-weight: bold; line-height: 1.2; text-align: center; }
@@ -86,12 +136,36 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .content { margin-bottom: 25px; text-align: justify; line-height: 1.3; }
         .content p { margin-bottom: 15px; page-break-inside: avoid; line-height: 1.3; }
         table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-        th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; font-size: 10pt; }
-        th { font-weight: bold; text-align: center; }
-        .number-col { width: 40px; text-align: center; }
-        .name-col { width: 200px; }
-        .position-col { width: 180px; }
-        .education-col { width: 140px; }
+        th, td { 
+          border: 1px solid black; 
+          padding: 10px 8px; 
+          text-align: left; 
+          vertical-align: top; 
+          font-size: 10pt; 
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
+        }
+        th { 
+          font-weight: bold; 
+          text-align: center; 
+        }
+        .number-col { 
+          width: 50px; 
+          text-align: center; 
+        }
+        .name-col { 
+          width: 220px; 
+          min-width: 180px;
+        }
+        .position-col { 
+          width: 200px; 
+          min-width: 150px;
+        }
+        .education-col { 
+          width: 160px; 
+          min-width: 120px;
+        }
         .attachment-section { margin: 10px 0; page-break-inside: avoid; }
         .attachment-section p { margin-top: 0px !important; margin-bottom: 8px !important; }
         .attachment-list ol { margin: 0; padding-left: 20px; }
@@ -104,32 +178,154 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
         .signature-name { font-weight: bold; margin-bottom: 5px; color: black; }
         .signature-nip { font-size: 10pt; color: black; }
 
-        /* Smart page break logic */
-        .data-table { page-break-inside: auto; }
-        .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-        .data-table tbody tr:last-child { margin-bottom: 15px; }
+        /* Improved page break logic for better print handling */
+        .data-table { 
+          page-break-inside: auto; 
+          margin-bottom: 20px;
+          table-layout: fixed;
+          width: 100%;
+        }
         
-        /* Force page break before last row if table is too long */
+        .data-table thead { 
+          display: table-header-group; 
+          page-break-after: avoid;
+        }
+        
+        .data-table tbody tr { 
+          page-break-inside: avoid; 
+          page-break-after: auto;
+          break-inside: avoid;
+          min-height: 30px;
+        }
+        
+        /* Better spacing for table rows */
+        .data-table tbody tr:last-child { 
+          margin-bottom: 15px; 
+        }
+        
+        /* Improved page break handling */
         .data-table tbody tr:nth-last-child(1) { 
           page-break-before: auto; 
         }
+        
         .data-table tbody tr:nth-last-child(2) { 
           page-break-after: avoid;
           margin-bottom: 0;
         }
         
+        /* Content sections should avoid breaking */
+        .content p { 
+          page-break-inside: avoid; 
+          margin-bottom: 15px; 
+        }
+        
+        .attachment-section { 
+          page-break-inside: avoid; 
+          margin: 15px 0; 
+        }
+        
+        .signature-section { 
+          page-break-inside: avoid; 
+          margin-top: 40px; 
+        }
+        
         @media print { 
-          .data-table thead { display: table-row-group !important; }
-          .data-table tbody tr:last-child { margin-bottom: 15px !important; }
+          /* Ensure table headers repeat on each page */
+          .data-table thead { 
+            display: table-header-group !important; 
+            page-break-after: avoid !important;
+          }
+          
+          /* Better row handling */
+          .data-table tbody tr { 
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            orphans: 2 !important;
+            widows: 2 !important;
+          }
+          
+          /* Prevent breaking between table rows */
+          .data-table tbody tr:not(:last-child) { 
+            page-break-after: avoid !important;
+          }
+          
+          /* Last row spacing */
+          .data-table tbody tr:last-child { 
+            margin-bottom: 15px !important; 
+          }
+          
+          /* Second to last row should not break after */
           .data-table tbody tr:nth-last-child(2) { 
             page-break-after: avoid !important;
             margin-bottom: 0 !important;
           }
-          /* Smart break: if row is too close to bottom, break before it */
+          
+          /* Ensure content sections don't break */
+          .content p { 
+            page-break-inside: avoid !important; 
+          }
+          
+          .attachment-section { 
+            page-break-inside: avoid !important; 
+          }
+          
+          .signature-section { 
+            page-break-inside: avoid !important; 
+          }
+          
+          /* Better text handling for print */
+          th, td { 
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            hyphens: auto !important;
+            padding: 10px 8px !important;
+            white-space: normal !important;
+          }
+          
+          /* Ensure proper spacing between elements */
+          .data-table { 
+            margin-bottom: 20px !important; 
+          }
+          
+          /* Better line height for print */
+          .data-table td { 
+            line-height: 1.3 !important; 
+          }
+          
+          /* Prevent text from being cut off */
           .data-table tbody tr { 
-            page-break-inside: avoid !important;
-            orphans: 3 !important;
-            widows: 3 !important;
+            min-height: 35px !important;
+          }
+          
+          /* Better column width handling */
+          .data-table { 
+            table-layout: fixed !important;
+            width: 100% !important;
+          }
+          
+          /* Better column widths for print */
+          .number-col { 
+            width: 50px !important; 
+          }
+          .name-col { 
+            width: 220px !important; 
+          }
+          .position-col { 
+            width: 200px !important; 
+          }
+          .education-col { 
+            width: 160px !important; 
+          }
+          
+          /* Better page margins for print */
+          @page { 
+            margin: 1.5cm 1cm 1.5cm 1cm !important; 
+          }
+          
+          /* Better text handling for print */
+          .data-table td { 
+            padding: 12px 8px !important;
+            line-height: 1.4 !important;
           }
         }
       `}</style>

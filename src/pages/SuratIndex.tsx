@@ -5,6 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { KemenagDocumentTemplate } from "@/components/pension/KemenagDocumentTemplate"
 import { SPTJMTemplateGelar } from "@/components/pension/SPTJMTemplateGelar"
 import { SPTJMTemplatePensiun } from "@/components/pension/SPTJMTemplatePensiun"
+import { PengantarPenyematanGelarTemplate } from "@/components/pension/PengantarPenyematanGelarTemplate"
+import { PengantarPensiunTemplate } from "@/components/pension/PengantarPensiunTemplate"
+import { SuratKeteranganMeninggalTemplate } from "@/components/pension/SuratKeteranganMeninggalTemplate"
 import { listLetters, deleteLetterService } from "@/lib/letters-service"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
@@ -114,6 +117,197 @@ export default function SuratIndex() {
   const [viewOpen, setViewOpen] = React.useState(false)
   const [viewLetterId, setViewLetterId] = React.useState<string | null>(null)
   const [copiedField, setCopiedField] = React.useState<string | null>(null)
+
+  // ===== DYNAMIC TEMPLATE REGISTRY SYSTEM =====
+  // Scalable system untuk mapping tipe surat ke template komponen
+  // 
+  // 🎯 CARA MENAMBAH TIPE SURAT BARU:
+  // 1. Import komponen template baru di bagian atas file
+  // 2. Tambah entry baru di templateRegistry dengan format:
+  //    'nama_tipe': {
+  //      component: NamaKomponenTemplate,
+  //      prepareProps: (letter, signatureDate) => ({ /* props untuk komponen */ })
+  //    }
+  // 3. Sistem akan otomatis detect dan render template yang sesuai!
+  //
+  // ✅ KEUNGGULAN:
+  // - Support 100+ tipe surat tanpa hardcode if-else
+  // - Maintainable: setiap tipe terisolasi
+  // - Extensible: mudah menambah tipe baru  
+  // - Fallback: ada default template
+  // - Performance optimized dengan React.useMemo/useCallback
+  //
+  // 📝 CONTOH MENAMBAH TIPE BARU:
+  // 'surat_peringatan': {
+  //   component: SuratPeringatanTemplate,
+  //   prepareProps: (letter, signatureDate) => ({
+  //     logoUrl: "/logo-kemenag.png",
+  //     nomorSurat: letter.nomorSurat,
+  //     namaPegawai: letter.namaPegawai,
+  //     tingkatPeringatan: letter.tingkatPeringatan || "I",
+  //     signatureDate: signatureDate,
+  //     // ... props lainnya
+  //   })
+  // }
+  const templateRegistry = React.useMemo(() => ({
+    'sptjm_gelar': {
+      component: SPTJMTemplateGelar,
+      prepareProps: (letter: any, signatureDate: string) => ({
+        logoUrl: "/logo-kemenag.png",
+        nomorSurat: letter.nomorSurat,
+        namaPenandatangan: letter.namaPenandatangan,
+        nipPenandatangan: letter.nipPenandatangan,
+        jabatanPenandatangan: letter.jabatanPenandatangan,
+        tempat: letter.signaturePlace,
+        tanggalText: signatureDate,
+        signatureMode: letter.signatureMode,
+        signatureAnchor: letter.signatureAnchor,
+        nomorSuratRujukan: (letter as any).nomorSuratRujukan || "",
+        tanggalSuratRujukanText: (letter as any).tanggalSuratRujukanText || "",
+        perihalSuratRujukan: (letter as any).perihalSuratRujukan || "",
+      })
+    },
+    'sptjm_pensiun': {
+      component: SPTJMTemplatePensiun,
+      prepareProps: (letter: any, signatureDate: string) => {
+        const pegawaiData = (letter as any)?.pegawaiData || []
+        const atasNama = pegawaiData.map((p: any) => ({
+          nama: p.name || p.nama || "",
+          nip: p.nip || ""
+        }))
+        
+        return {
+          logoUrl: "/logo-kemenag.png",
+          nomorSurat: letter.nomorSurat,
+          namaPenandatangan: letter.namaPenandatangan,
+          nipPenandatangan: letter.nipPenandatangan,
+          jabatanPenandatangan: letter.jabatanPenandatangan,
+          tempat: letter.signaturePlace,
+          tanggalText: signatureDate,
+          signatureMode: letter.signatureMode,
+          signatureAnchor: letter.signatureAnchor,
+          nomorSuratRujukan: (letter as any).nomorSuratRujukan || "",
+          tanggalSuratRujukanText: (letter as any).tanggalSuratRujukanText || "",
+          perihalSuratRujukan: (letter as any).perihalSuratRujukan || "",
+          atasNama: atasNama,
+        }
+      }
+    },
+    'pengantar_gelar': {
+      component: PengantarPenyematanGelarTemplate,
+      prepareProps: (letter: any, signatureDate: string) => {
+        const pegawaiData = (letter as any)?.pegawaiData || []
+        const rows = pegawaiData.map((p: any, idx: number) => ({
+          nomor: idx + 1,
+          nama: p.name || p.nama || "",
+          nip: p.nip || "",
+          jabatan: p.jabatan || p.position || "",
+          pendidikanLama: p.pendidikanLama || "",
+          pendidikanTerakhir: p.pendidikanTerakhir || "",
+        }))
+        
+        const addresseeText = `${(letter as any).addresseeJabatan || 'Biro SDM Kementerian Agama RI'}<br />${(letter as any).addresseeKota || 'Jakarta'}`
+        
+        return {
+          logoUrl: "/logo-kemenag.png",
+          nomorSurat: letter.nomorSurat,
+          lampiran: "-",
+          tanggalSuratText: signatureDate,
+          addresseeText: addresseeText,
+          penandatanganJabatan: letter.jabatanPenandatangan,
+          penandatanganNama: letter.namaPenandatangan,
+          penandatanganNip: letter.nipPenandatangan,
+          tempatTanggalText: `${letter.signaturePlace || 'Mataram'}, ${signatureDate}`,
+          rows: rows,
+          signatureMode: letter.signatureMode,
+          signatureAnchor: letter.signatureAnchor,
+        }
+      }
+    },
+    'pengantar_pensiun': {
+      component: PengantarPensiunTemplate,
+      prepareProps: (letter: any, signatureDate: string) => {
+        const pegawaiData = (letter as any)?.pegawaiData || []
+        const rows = pegawaiData.map((p: any, idx: number) => ({
+          nomor: idx + 1,
+          nama: p.name || p.nama || "",
+          nip: p.nip || "",
+          golongan: p.golongan || "",
+          jabatanTempatTugas: p.jabatan || p.position || "",
+          keterangan: p.jenisPensiun || p.keterangan || "BUP",
+        }))
+        
+        return {
+          logoUrl: "/logo-kemenag.png",
+          nomorSurat: letter.nomorSurat,
+          lampiran: "-",
+          tanggalSuratText: signatureDate,
+          addresseeText: "Sekretaris Jenderal Kementerian Agama RI<br />Up. Kepala Biro SDM<br />Jakarta",
+          penandatanganNama: letter.namaPenandatangan,
+          penandatanganNip: letter.nipPenandatangan,
+          tempatTanggalText: `${letter.signaturePlace || 'Mataram'}, ${signatureDate}`,
+          rows: rows,
+          signatureMode: letter.signatureMode,
+          signatureAnchor: letter.signatureAnchor,
+        }
+      }
+    },
+    'surat_meninggal': {
+      component: SuratKeteranganMeninggalTemplate,
+      prepareProps: (letter: any, signatureDate: string) => ({
+        logoUrl: "/logo-kemenag.png",
+        documentNumber: letter.nomorSurat,
+        signatoryName: letter.namaPenandatangan,
+        signatoryNip: letter.nipPenandatangan,
+        signatoryPosition: letter.jabatanPenandatangan,
+        subjectName: letter.namaPegawai,
+        subjectNip: letter.nipPegawai,
+        subjectPosition: letter.posisiPegawai,
+        subjectUnit: letter.unitPegawai,
+        tanggalMeninggal: (letter as any).tanggalMeninggal || "",
+        signaturePlace: letter.signaturePlace,
+        signatureDate: signatureDate,
+        signatureMode: letter.signatureMode,
+        signatureAnchor: letter.signatureAnchor,
+      })
+    },
+    // Default fallback untuk hukuman_disiplin dan tipe lainnya
+    '_default': {
+      component: KemenagDocumentTemplate,
+      prepareProps: (letter: any, signatureDate: string) => ({
+        logoUrl: "/logo-kemenag.png",
+        documentNumberPage1: letter.nomorSurat,
+        documentNumberPage2: letter.nomorSurat,
+        signatoryName: letter.namaPenandatangan,
+        signatoryNip: letter.nipPenandatangan,
+        signatoryPosition: letter.jabatanPenandatangan,
+        subjectName: letter.namaPegawai,
+        subjectNip: letter.nipPegawai,
+        subjectPosition: letter.posisiPegawai,
+        subjectAgency: letter.unitPegawai,
+        signaturePlace: letter.signaturePlace,
+        signatureDate: signatureDate,
+        signatureMode: letter.signatureMode,
+        signatureAnchor: letter.signatureAnchor,
+      })
+    }
+  }), [])
+
+  // Dynamic template renderer - scalable untuk 100+ tipe surat
+  const renderLetterTemplate = React.useCallback((letter: any, signatureDate: string) => {
+    const letterType = (letter as any)?.type || ""
+    
+    // Cari template di registry berdasarkan tipe, fallback ke default
+    const templateConfig = templateRegistry[letterType as keyof typeof templateRegistry] || templateRegistry._default
+    
+    const TemplateComponent = templateConfig.component as any
+    const props = templateConfig.prepareProps(letter, signatureDate)
+    
+    // Debug log (uncomment untuk troubleshooting)
+    // console.log(`🎯 Rendering template for type: "${letterType}" using ${TemplateComponent.name}`)
+    
+    return React.createElement(TemplateComponent, props)
+  }, [templateRegistry])
 
   const [letters, setLetters] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -557,74 +751,7 @@ export default function SuratIndex() {
                 <div className="min-w-[800px]">
                   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.min.css" />
                   <div id="surat-print-area-index">
-                    {letter && (() => {
-                      const letterType = (letter as any)?.type || ""
-                      
-                      if (letterType === 'sptjm_gelar') {
-                        return (
-                          <SPTJMTemplateGelar
-                            logoUrl="/logo-kemenag.png"
-                            nomorSurat={letter.nomorSurat}
-                            namaPenandatangan={letter.namaPenandatangan}
-                            nipPenandatangan={letter.nipPenandatangan}
-                            jabatanPenandatangan={letter.jabatanPenandatangan}
-                            tempat={letter.signaturePlace}
-                            tanggalText={signatureDate}
-                            signatureMode={letter.signatureMode}
-                            signatureAnchor={letter.signatureAnchor}
-                            nomorSuratRujukan={(letter as any).nomorSuratRujukan || ""}
-                            tanggalSuratRujukanText={(letter as any).tanggalSuratRujukanText || ""}
-                            perihalSuratRujukan={(letter as any).perihalSuratRujukan || ""}
-                          />
-                        )
-                      }
-                      
-                      if (letterType === 'sptjm_pensiun') {
-                        const pegawaiData = (letter as any)?.pegawaiData || []
-                        const atasNama = pegawaiData.map((p: any) => ({
-                          nama: p.name || p.nama || "",
-                          nip: p.nip || ""
-                        }))
-                        
-                        return (
-                          <SPTJMTemplatePensiun
-                            logoUrl="/logo-kemenag.png"
-                            nomorSurat={letter.nomorSurat}
-                            namaPenandatangan={letter.namaPenandatangan}
-                            nipPenandatangan={letter.nipPenandatangan}
-                            jabatanPenandatangan={letter.jabatanPenandatangan}
-                            tempat={letter.signaturePlace}
-                            tanggalText={signatureDate}
-                            signatureMode={letter.signatureMode}
-                            signatureAnchor={letter.signatureAnchor}
-                            nomorSuratRujukan={(letter as any).nomorSuratRujukan || ""}
-                            tanggalSuratRujukanText={(letter as any).tanggalSuratRujukanText || ""}
-                            perihalSuratRujukan={(letter as any).perihalSuratRujukan || ""}
-                            atasNama={atasNama}
-                          />
-                        )
-                      }
-                      
-                      // Default to KemenagDocumentTemplate for hukuman_disiplin and other types
-                      return (
-                        <KemenagDocumentTemplate
-                          logoUrl="/logo-kemenag.png"
-                          documentNumberPage1={letter.nomorSurat}
-                          documentNumberPage2={letter.nomorSurat}
-                          signatoryName={letter.namaPenandatangan}
-                          signatoryNip={letter.nipPenandatangan}
-                          signatoryPosition={letter.jabatanPenandatangan}
-                          subjectName={letter.namaPegawai}
-                          subjectNip={letter.nipPegawai}
-                          subjectPosition={letter.posisiPegawai}
-                          subjectAgency={letter.unitPegawai}
-                          signaturePlace={letter.signaturePlace}
-                          signatureDate={signatureDate}
-                          signatureMode={letter.signatureMode}
-                          signatureAnchor={letter.signatureAnchor}
-                        />
-                      )
-                    })()}
+                    {letter && renderLetterTemplate(letter, signatureDate)}
                   </div>
                 </div>
               </div>
