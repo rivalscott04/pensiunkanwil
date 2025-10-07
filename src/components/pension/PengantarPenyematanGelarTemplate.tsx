@@ -63,10 +63,10 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
           margin-top: 1.5cm; 
         }
         @page :left { 
-          margin-top: 1.5cm; 
+          margin-top: 2.5cm; 
         }
         @page :right { 
-          margin-top: 1.5cm; 
+          margin-top: 2.5cm; 
         }
         html, body { 
           margin: 0; 
@@ -329,11 +329,11 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
           
           /* Specific margins for page 2 and beyond */
           @page :left { 
-            margin-top: 1.5cm !important; 
+            margin-top: 2.5cm !important; 
             margin-bottom: 1.5cm !important;
           }
           @page :right { 
-            margin-top: 1.5cm !important; 
+            margin-top: 2.5cm !important; 
             margin-bottom: 1.5cm !important;
           }
           
@@ -359,17 +359,26 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
             margin-top: 10px !important;
           }
           
+          /* Fix text cutting on page 2+ */
+          .sheet:not(:first-child) .data-table td {
+            padding: 15px 10px !important;
+            line-height: 1.5 !important;
+            min-height: 40px !important;
+          }
+          
           /* Better page break handling for page 2+ */
           .sheet:not(:first-child) .data-table tbody tr {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            min-height: 45px !important;
           }
           
           /* Ensure proper text spacing on page 2+ */
           .sheet:not(:first-child) .data-table td {
-            padding: 12px 8px !important;
-            line-height: 1.4 !important;
+            padding: 15px 10px !important;
+            line-height: 1.5 !important;
             word-wrap: break-word !important;
+            min-height: 40px !important;
           }
           
           /* Better column handling for page 2+ */
@@ -380,16 +389,36 @@ export const PengantarPenyematanGelarTemplate: React.FC<PengantarPenyematanGelar
           
           /* Specific column widths for page 2+ */
           .sheet:not(:first-child) .number-col { 
-            width: 50px !important; 
+            width: 60px !important; 
           }
           .sheet:not(:first-child) .name-col { 
-            width: 220px !important; 
+            width: 250px !important; 
           }
           .sheet:not(:first-child) .position-col { 
-            width: 200px !important; 
+            width: 220px !important; 
           }
           .sheet:not(:first-child) .education-col { 
-            width: 160px !important; 
+            width: 180px !important; 
+          }
+          
+          /* Better text handling for page 2+ */
+          .sheet:not(:first-child) .data-table td {
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+          }
+          
+          /* Prevent text cutting on page 2+ */
+          .sheet:not(:first-child) .data-table tbody tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            orphans: 2 !important;
+            widows: 2 !important;
+          }
+          
+          /* Better spacing for page 2+ */
+          .sheet:not(:first-child) .data-table {
+            margin-bottom: 25px !important;
           }
         }
       `}</style>
